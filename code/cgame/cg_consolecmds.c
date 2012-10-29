@@ -384,11 +384,11 @@ CG_TeamMenu_f
 /*
 static void CG_TeamMenu_f( void ) {
   if (trap_Key_GetCatcher() & KEYCATCH_CGAME) {
-    CG_EventHandling(CGAME_EVENT_NONE);
-    trap_Key_SetCatcher(0);
+	CG_EventHandling(CGAME_EVENT_NONE);
+	trap_Key_SetCatcher(0);
   } else {
-    CG_EventHandling(CGAME_EVENT_TEAMMENU);
-    //trap_Key_SetCatcher(KEYCATCH_CGAME);
+	CG_EventHandling(CGAME_EVENT_TEAMMENU);
+	//trap_Key_SetCatcher(KEYCATCH_CGAME);
   }
 }
 */
@@ -444,6 +444,14 @@ static void CG_Camera_f( void ) {
 }
 */
 
+/*
+========================
+CG_Q3P_GenRandomSample_f
+========================
+*/
+static void CG_Q3P_GenRandomSample_f( void ) {
+
+}
 
 typedef struct {
 	char	*cmd;
@@ -500,7 +508,10 @@ static consoleCommand_t	commands[] = {
 #endif
 	{ "startOrbit", CG_StartOrbit_f },
 	//{ "camera", CG_Camera_f },
-	{ "loaddeferred", CG_LoadDeferredPlayers }	
+	{ "loaddeferred", CG_LoadDeferredPlayers },	
+
+	// freemancw - Q3Plan
+	{ "q3p_genrandomsample", CG_Q3P_GenRandomSample_f }
 };
 
 
@@ -580,4 +591,7 @@ void CG_InitConsoleCommands( void ) {
 	trap_AddCommand ("stats");
 	trap_AddCommand ("teamtask");
 	trap_AddCommand ("loaddefered");	// spelled wrong, but not changing for demo
+	
+	// freemancw - Q3Plan
+	trap_AddCommand ("q3p_genrandomsample");
 }
