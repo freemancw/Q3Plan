@@ -690,6 +690,11 @@ void BotTestAAS(vec3_t origin);
 #include "g_team.h" // teamplay specific stuff
 
 
+//
+// g_plan.c
+//
+void G_Q3P_GenRandomSample( void );
+
 extern	level_locals_t	level;
 extern	gentity_t		g_entities[MAX_GENTITIES];
 

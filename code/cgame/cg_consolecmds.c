@@ -449,9 +449,11 @@ static void CG_Camera_f( void ) {
 CG_Q3P_GenRandomSample_f
 ========================
 */
+/*
 static void CG_Q3P_GenRandomSample_f( void ) {
-
+	CG_Printf("CG_Q3P_GenRandomSample_f\n");
 }
+*/
 
 typedef struct {
 	char	*cmd;
@@ -511,7 +513,7 @@ static consoleCommand_t	commands[] = {
 	{ "loaddeferred", CG_LoadDeferredPlayers },	
 
 	// freemancw - Q3Plan
-	{ "q3p_genrandomsample", CG_Q3P_GenRandomSample_f }
+	//{ "q3p_genrandomsample", CG_Q3P_GenRandomSample_f }
 };
 
 

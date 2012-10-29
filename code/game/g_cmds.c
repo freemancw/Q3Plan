@@ -1591,6 +1591,16 @@ void Cmd_Stats_f( gentity_t *ent ) {
 }
 
 /*
+=========================
+Cmd_Q3P_GenRandomSample_f
+=========================
+*/
+void Cmd_Q3P_GenRandomSample_f( gentity_t *ent ) {
+	G_Printf("Cmd_Q3P_GenRandomSample_f\n");
+	G_Q3P_GenRandomSample();
+}
+
+/*
 =================
 ClientCommand
 =================
@@ -1698,6 +1708,11 @@ void ClientCommand( int clientNum ) {
 		Cmd_SetViewpos_f( ent );
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );
+	
+	// freemancw - Q3Plan
+	else if (Q_stricmp (cmd, "q3p_genrandomsample") == 0)
+		Cmd_Q3P_GenRandomSample_f( ent );
+
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
 }
