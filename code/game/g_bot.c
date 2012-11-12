@@ -553,13 +553,12 @@ qboolean G_BotConnect( int clientNum, qboolean restart ) {
 	return qtrue;
 }
 
-
 /*
 ===============
 G_AddBot
 ===============
 */
-static void G_AddBot( const char *name, float skill, const char *team, int delay, char *altname) {
+static void G_AddBot( const char *name, float skill, const char *team, int delay, char *altname ) {
 	int				clientNum;
 	char			*botinfo;
 	gentity_t		*bot;
@@ -788,6 +787,22 @@ void Svcmd_BotList_f( void ) {
 	}
 }
 
+/*
+===============
+G_AddPlannerBot 
+===============
+*/
+void G_AddPlannerBot( void ) {
+	int clientNum;
+
+	G_AddBot( "Sarge", 1.0, "free", 0, "PlannerBot" );
+	if ( level.time - level.startTime > 1000 &&
+		trap_Cvar_VariableIntegerValue( "cl_running" ) ) {
+		trap_SendServerCommand( -1, "loaddefered\n" );	// FIXME: spelled wrong, but not changing for demo
+	}
+	clientNum = level.numConnectedClients - 1;
+	g_entities[clientNum].isPlannerBot = qtrue;
+}
 
 /*
 ===============

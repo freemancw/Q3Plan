@@ -102,6 +102,8 @@ struct gentity_s {
 									// when moving.  items and corpses do not collide against
 									// players, for instance
 
+	qboolean	isPlannerBot;		// freemancw - is this client being used for motion planning?
+
 	// movers
 	moverState_t moverState;
 	int			soundPos1;
@@ -664,6 +666,7 @@ char *G_GetBotInfoByName( const char *name );
 void G_CheckBotSpawn( void );
 void G_RemoveQueuedBotBegin( int clientNum );
 qboolean G_BotConnect( int clientNum, qboolean restart );
+void G_AddPlannerBot( void );
 void Svcmd_AddBot_f( void );
 void Svcmd_BotList_f( void );
 void BotInterbreedEndMatch( void );

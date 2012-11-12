@@ -8,4 +8,5 @@
 void G_Q3P_GenRandomSample( void ) 
 {
 	G_Printf("G_Q3P_GenRandomSample\n");
+	G_AddPlannerBot();
 }
