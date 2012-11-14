@@ -1595,9 +1595,21 @@ void Cmd_Stats_f( gentity_t *ent ) {
 Cmd_Q3P_GenRandomSample_f
 =========================
 */
-void Cmd_Q3P_GenRandomSample_f( gentity_t *ent ) {
+void Cmd_Q3P_GenRandomSample_f(gentity_t *ent) 
+{
 	G_Printf("Cmd_Q3P_GenRandomSample_f\n");
 	G_Q3P_GenRandomSample();
+}
+
+/*
+=========================
+Cmd_Q3P_SpawnPlannerBot_f
+=========================
+*/
+void Cmd_Q3P_SpawnPlannerBot_f(gentity_t *ent) 
+{
+	G_Printf("Cmd_Q3P_SpawnPlannerBot_f\n");
+	G_Q3P_SpawnPlannerBot();
 }
 
 /*
@@ -1712,6 +1724,8 @@ void ClientCommand( int clientNum ) {
 	// freemancw - Q3Plan
 	else if (Q_stricmp (cmd, "q3p_genrandomsample") == 0)
 		Cmd_Q3P_GenRandomSample_f( ent );
+	else if (Q_stricmp (cmd, "q3p_spawnplannerbot") == 0)
+		Cmd_Q3P_SpawnPlannerBot_f( ent );
 
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );

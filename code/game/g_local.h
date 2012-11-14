@@ -102,7 +102,8 @@ struct gentity_s {
 									// when moving.  items and corpses do not collide against
 									// players, for instance
 
-	qboolean	isPlannerBot;		// freemancw - is this client being used for motion planning?
+	// freemancw - motion planning
+	qboolean	q3p_isPlannerBot;		// is this client being used for motion planning?
 
 	// movers
 	moverState_t moverState;
@@ -666,10 +667,12 @@ char *G_GetBotInfoByName( const char *name );
 void G_CheckBotSpawn( void );
 void G_RemoveQueuedBotBegin( int clientNum );
 qboolean G_BotConnect( int clientNum, qboolean restart );
-void G_AddPlannerBot( void );
 void Svcmd_AddBot_f( void );
 void Svcmd_BotList_f( void );
 void BotInterbreedEndMatch( void );
+
+// freemancw - motion planning
+gentity_t* G_Q3P_AddPlannerBot( void );
 
 // ai_main.c
 #define MAX_FILEPATH			144
@@ -696,7 +699,24 @@ void BotTestAAS(vec3_t origin);
 //
 // g_plan.c
 //
+
+// new stuff
+void G_Q3P_SpawnPlannerBot( void );
+
+// old stuff
+typedef struct 
+{
+	gentity_t gState;
+	struct gclient_s gClient;
+} 
+Q3P_State_t;
+
+Q3P_State_t* G_Q3P_SelectState( void );
+void G_Q3P_CreateState( gentity_t* ent, Q3P_State_t* state );
+void G_Q3P_AddState( Q3P_State_t *newState ); 
+void G_Q3P_SelectControls( usercmd_t* out );
 void G_Q3P_GenRandomSample( void );
+
 
 extern	level_locals_t	level;
 extern	gentity_t		g_entities[MAX_GENTITIES];

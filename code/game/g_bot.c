@@ -788,21 +788,55 @@ void Svcmd_BotList_f( void ) {
 }
 
 /*
-===============
-G_AddPlannerBot 
-===============
+===================
+G_Q3P_AddPlannerBot 
+===================
 */
-void G_AddPlannerBot( void ) {
-	int clientNum;
+gentity_t* G_Q3P_AddPlannerBot(void) 
+{
+	gentity_t *pBot;
 
+	// add the bot
+	G_AddBot("Sarge", 1.0, "free", 0, "PlannerBot");
+
+	// load bot's media
+	if(level.time - level.startTime > 1000 &&
+	   trap_Cvar_VariableIntegerValue("cl_running")) 
+	{
+		trap_SendServerCommand(-1, "loaddefered\n");
+	}
+
+	// the bot is the last connected client
+	pBot = g_entities + level.numConnectedClients - 1;
+	pBot->q3p_isPlannerBot = qtrue;
+
+	return pBot;
+}
+
+
+
+
+
+/*
+gentity_t* G_AddPlannerBot( qboolean isPlanning, int sampleRate ) {
+	gentity_t *pBot;
+	
 	G_AddBot( "Sarge", 1.0, "free", 0, "PlannerBot" );
+	
 	if ( level.time - level.startTime > 1000 &&
 		trap_Cvar_VariableIntegerValue( "cl_running" ) ) {
-		trap_SendServerCommand( -1, "loaddefered\n" );	// FIXME: spelled wrong, but not changing for demo
+		trap_SendServerCommand( -1, "loaddefered\n" );
 	}
-	clientNum = level.numConnectedClients - 1;
-	g_entities[clientNum].isPlannerBot = qtrue;
+
+	pBot = g_entities + level.numConnectedClients - 1;
+	pBot->isPlannerBot = qtrue;
+	pBot->isPlanning = isPlanning;
+	pBot->samplingRate = sampleRate;
+	pBot->lastSampleTime = level.time;
+
+	return pBot;
 }
+*/
 
 /*
 ===============

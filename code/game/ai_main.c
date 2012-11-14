@@ -1422,6 +1422,7 @@ int BotAIStartFrame(int time) {
 	// freemancw - 
 	for( i = 0; i < MAX_CLIENTS; i++ ) {
 		if( g_entities[i].isPlannerBot ) {
+			/*
 			if( !botstates[i] || !botstates[i]->inuse ) {
 				continue;
 			}
@@ -1429,12 +1430,15 @@ int BotAIStartFrame(int time) {
 				continue;
 			}
 
+
 			botstates[i]->lastucmd.forwardmove = 0;
 			botstates[i]->lastucmd.rightmove = 0;
 			botstates[i]->lastucmd.upmove = 0;
 			botstates[i]->lastucmd.buttons = 0;
 			botstates[i]->lastucmd.serverTime = time;
 			trap_BotUserCommand(botstates[i]->client, &botstates[i]->lastucmd);
+			*/
+			
 			return qtrue;
 		}
 	}
