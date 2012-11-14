@@ -104,6 +104,7 @@ struct gentity_s {
 
 	// freemancw - motion planning
 	qboolean	q3p_isPlannerBot;		// is this client being used for motion planning?
+	int			q3p_advanceFrameNum;	// number of frames to apply a random control
 
 	// movers
 	moverState_t moverState;
@@ -702,6 +703,7 @@ void BotTestAAS(vec3_t origin);
 
 // new stuff
 void G_Q3P_SpawnPlannerBot( void );
+void G_Q3P_AdvancePlannerBot( void );
 
 // old stuff
 typedef struct 

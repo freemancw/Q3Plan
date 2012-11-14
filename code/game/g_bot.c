@@ -809,6 +809,7 @@ gentity_t* G_Q3P_AddPlannerBot(void)
 	// the bot is the last connected client
 	pBot = g_entities + level.numConnectedClients - 1;
 	pBot->q3p_isPlannerBot = qtrue;
+	pBot->q3p_advanceFrameNum = 10; // drop to floor (arbitrary number)
 
 	return pBot;
 }

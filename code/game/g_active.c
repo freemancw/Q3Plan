@@ -1032,35 +1032,25 @@ void ClientThink( int clientNum ) {
 
 void G_RunClient( gentity_t *ent ) {
 
-	if(ent->q3p_isPlannerBot)
-	{
-		// mark the time we got info, so we can display the
-		// phone jack if they don't get any for a while
-		ent->client->lastCmdTime = level.time;
-
-		if(ent->lastSampleTime + ent->samplingRate > level.time)
-			return;
-
-		// choose a state from the tree
-		memcpy(&tempState, G_Q3P_SelectState(), sizeof(Q3P_State_t));
-		memcpy(tempState.gState.client, &(tempState.gClient), sizeof(struct gclient_s));
-		// choose random inputs
-		G_Printf("Velocity x: %d, y: %d\n", tempState.gState.client->ps.velocity[0], tempState.gState.client->ps.velocity[1]);
-		G_Q3P_SelectControls(&(tempState.gState.client->pers.cmd));
-		//memcpy(&(ent->client->pers.cmd), &(G_Q3P_SelectControls()), sizeof(usercmd_t));
-
-		tempState.gState.lastSampleTime = level.time;
-
-		ClientThink_real( &(tempState.gState) );
-		G_Q3P_AddState(&tempState);
-		memcpy(ent, &(tempState.gState), sizeof(gentity_t));
-		return;
-	}
-
 	if ( !(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer ) {
 		return;
 	}
+
 	ent->client->pers.cmd.serverTime = level.time;
+
+	// freemancw - motion planning
+	if( ent->q3p_isPlannerBot ) {
+		// get rid of the phone jack
+		ent->client->lastCmdTime = level.time;
+
+		if( ent->q3p_advanceFrameNum ) {
+			ClientThink_real( ent );
+			ent->q3p_advanceFrameNum--;
+		}
+
+		return;
+	}
+
 	ClientThink_real( ent );
 }
 
