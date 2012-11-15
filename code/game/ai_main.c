@@ -1399,6 +1399,7 @@ int BotAIStartFrame(int time) {
 	static int local_time;
 	static int botlib_residual;
 	static int lastbotthink_time;
+	char buf[1024];
 
 	G_CheckBotSpawn();
 
@@ -1421,7 +1422,18 @@ int BotAIStartFrame(int time) {
 
 	// freemancw - motion planning
 	for( i = 0; i < MAX_CLIENTS; i++ ) {
+		if( !botstates[i] || !botstates[i]->inuse ) {
+			continue;
+		}
+		if( g_entities[i].client->pers.connected != CON_CONNECTED ) {
+			continue;
+		}
 		if( g_entities[i].q3p_isPlannerBot ) {
+			G_Q3P_SelectRandomControls(&(botstates[i]->lastucmd));
+			botstates[i]->lastucmd.serverTime = time;
+			trap_BotUserCommand(botstates[i]->client, &botstates[i]->lastucmd);
+			//retrieve any waiting server commands so the bot doesn't time out
+			while(trap_BotGetServerCommand(i, buf, sizeof(buf)));
 			return qtrue;
 		}
 	}

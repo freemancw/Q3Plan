@@ -808,36 +808,14 @@ gentity_t* G_Q3P_AddPlannerBot(void)
 
 	// the bot is the last connected client
 	pBot = g_entities + level.numConnectedClients - 1;
+	pBot->client->pers.pmoveFixed = qtrue;
+	pBot->client->ps.commandTime = level.time - 100;
+	pBot->client->pers.cmd.serverTime = level.time;
 	pBot->q3p_isPlannerBot = qtrue;
-	pBot->q3p_advanceFrameNum = 10; // drop to floor (arbitrary number)
+	pBot->q3p_advanceFrameNum = 32; // drop to floor (arbitrary number)
 
 	return pBot;
 }
-
-
-
-
-
-/*
-gentity_t* G_AddPlannerBot( qboolean isPlanning, int sampleRate ) {
-	gentity_t *pBot;
-	
-	G_AddBot( "Sarge", 1.0, "free", 0, "PlannerBot" );
-	
-	if ( level.time - level.startTime > 1000 &&
-		trap_Cvar_VariableIntegerValue( "cl_running" ) ) {
-		trap_SendServerCommand( -1, "loaddefered\n" );
-	}
-
-	pBot = g_entities + level.numConnectedClients - 1;
-	pBot->isPlannerBot = qtrue;
-	pBot->isPlanning = isPlanning;
-	pBot->samplingRate = sampleRate;
-	pBot->lastSampleTime = level.time;
-
-	return pBot;
-}
-*/
 
 /*
 ===============

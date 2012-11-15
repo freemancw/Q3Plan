@@ -1046,6 +1046,8 @@ void G_RunClient( gentity_t *ent ) {
 		if( ent->q3p_advanceFrameNum ) {
 			ClientThink_real( ent );
 			ent->q3p_advanceFrameNum--;
+		} else {
+			ent->client->ps.commandTime = level.time - 50;
 		}
 
 		return;
