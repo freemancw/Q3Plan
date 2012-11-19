@@ -595,5 +595,6 @@ void CG_InitConsoleCommands( void ) {
 	trap_AddCommand ("loaddefered");	// spelled wrong, but not changing for demo
 	
 	// freemancw - Q3Plan
-	trap_AddCommand ("q3p_genrandomsample");
+	trap_AddCommand ("q3p_spawnplannerbot");
+	trap_AddCommand ("q3p_advanceplannerbot");
 }

@@ -1619,8 +1619,40 @@ Cmd_Q3P_AdvancePlannerBot_f
 */
 void Cmd_Q3P_AdvancePlannerBot_f(gentity_t *ent) 
 {
-	G_Printf("Cmd_Q3P_SpawnPlannerBot_f\n");
-	G_Q3P_AdvancePlannerBot();
+	int	n;
+	char buffer[MAX_TOKEN_CHARS];
+
+	if(trap_Argc() < 1) 
+	{
+		n = 1;
+	}
+	else 
+	{
+		trap_Argv(1, buffer, sizeof(buffer));
+		n = atoi(buffer);
+	}
+	
+	G_Q3P_AdvancePlannerBot(n);
+}
+
+/*
+=============================
+Cmd_Q3P_SavePlannerBotState_f
+=============================
+*/
+void Cmd_Q3P_SavePlannerBotState_f(gentity_t *ent)
+{
+	G_Q3P_SavePlannerBotState();
+}
+
+/*
+=============================
+Cmd_Q3P_RestorePlannerBotState_f
+=============================
+*/
+void Cmd_Q3P_RestorePlannerBotState_f(gentity_t *ent)
+{
+	G_Q3P_RestorePlannerBotState();
 }
 
 /*
@@ -1739,7 +1771,10 @@ void ClientCommand( int clientNum ) {
 		Cmd_Q3P_SpawnPlannerBot_f( ent );
 	else if (Q_stricmp (cmd, "q3p_advanceplannerbot") == 0)
 		Cmd_Q3P_AdvancePlannerBot_f( ent );
-
+	else if (Q_stricmp (cmd, "q3p_saveplannerbotstate") == 0)
+		Cmd_Q3P_SavePlannerBotState_f( ent );
+	else if (Q_stricmp (cmd, "q3p_restoreplannerbotstate") == 0)
+		Cmd_Q3P_RestorePlannerBotState_f( ent );
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
 }

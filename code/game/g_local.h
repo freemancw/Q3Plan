@@ -703,7 +703,11 @@ void BotTestAAS(vec3_t origin);
 
 // new stuff
 void G_Q3P_SpawnPlannerBot( void );
-void G_Q3P_AdvancePlannerBot( void );
+void G_Q3P_AdvancePlannerBot( const int n );
+void G_Q3P_SavePlannerBotState( void );
+void G_Q3P_RestorePlannerBotState( void );
+void G_Q3P_SelectRandomControls( usercmd_t *out );
+
 
 // old stuff
 typedef struct 
