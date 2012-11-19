@@ -707,9 +707,10 @@ void G_Q3P_AdvancePlannerBot( const int n );
 void G_Q3P_SavePlannerBotState( void );
 void G_Q3P_RestorePlannerBotState( void );
 void G_Q3P_SelectRandomControls( usercmd_t *out );
+void G_Q3P_RunPlannerBotRRT( void );
 
 
-// old stuff
+// old stuff 
 typedef struct 
 {
 	gentity_t gState;

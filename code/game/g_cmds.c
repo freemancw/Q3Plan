@@ -1646,13 +1646,23 @@ void Cmd_Q3P_SavePlannerBotState_f(gentity_t *ent)
 }
 
 /*
-=============================
+================================
 Cmd_Q3P_RestorePlannerBotState_f
-=============================
+================================
 */
 void Cmd_Q3P_RestorePlannerBotState_f(gentity_t *ent)
 {
 	G_Q3P_RestorePlannerBotState();
+}
+
+/*
+================================
+Cmd_Q3P_RunPlannerBotRRT_f
+================================
+*/
+void Cmd_Q3P_RunPlannerBotRRT_f(gentity_t *ent)
+{
+	G_Q3P_RunPlannerBotRRT(); 
 }
 
 /*
@@ -1775,6 +1785,8 @@ void ClientCommand( int clientNum ) {
 		Cmd_Q3P_SavePlannerBotState_f( ent );
 	else if (Q_stricmp (cmd, "q3p_restoreplannerbotstate") == 0)
 		Cmd_Q3P_RestorePlannerBotState_f( ent );
+	else if (Q_stricmp (cmd, "q3p_runplannerbotrrt") == 0)
+		Cmd_Q3P_RunPlannerBotRRT_f( ent );
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
 }
