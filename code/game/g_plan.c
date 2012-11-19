@@ -6,7 +6,7 @@
 #include "g_local.h"
 
 static gentity_t *pBot;
-static int rIntBetween(int low, int high);
+static int rIntBetween(const int low, const int high);
 
 /*!
  *	G_Q3P_SpawnPlannerBot
@@ -21,7 +21,7 @@ void G_Q3P_SpawnPlannerBot(void)
  */
 void G_Q3P_AdvancePlannerBot(void)
 {
-	pBot->client->pers.cmd.forwardmove = 10;
+	pBot->client->pers.cmd.forwardmove = 64;
 
 	if(pBot)
 	{
@@ -33,7 +33,7 @@ void G_Q3P_AdvancePlannerBot(void)
  *	rIntBetween
  *	local convenience function for ranged random ints
  */
-static int rIntBetween(int low, int high) 
+static int rIntBetween(const int low, const int high) 
 {
 	return low + (rand() % (int)(high - low + 1));
 }
@@ -41,7 +41,7 @@ static int rIntBetween(int low, int high)
 
 
 
-void G_Q3P_SelectControls( usercmd_t* out )
+void G_Q3P_SelectControls(usercmd_t* out)
 {
 	out->angles[0] = ANGLE2SHORT(rIntBetween(0, 360));
 	out->angles[1] = ANGLE2SHORT(rIntBetween(0, 360));

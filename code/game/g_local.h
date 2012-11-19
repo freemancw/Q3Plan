@@ -705,17 +705,20 @@ void BotTestAAS(vec3_t origin);
 void G_Q3P_SpawnPlannerBot( void );
 void G_Q3P_AdvancePlannerBot( void );
 
-// old stuff
-typedef struct 
+typedef struct  
 {
-	gentity_t gState;
-	struct gclient_s gClient;
-} 
-Q3P_State_t;
+	entityState_t	s;			// communicated by server to clients
+	entityShared_t	r;			// shared by both the server system and game
 
-Q3P_State_t* G_Q3P_SelectState( void );
-void G_Q3P_CreateState( gentity_t* ent, Q3P_State_t* state );
-void G_Q3P_AddState( Q3P_State_t *newState ); 
+	struct gclient_s	*client;			// NULL if not a client
+	vec3_t		pos1, pos2;
+	float		speed;
+	vec3_t		movedir;
+}
+q3p_state_t;
+
+
+// old stuff
 void G_Q3P_SelectControls( usercmd_t* out );
 void G_Q3P_GenRandomSample( void );
 
