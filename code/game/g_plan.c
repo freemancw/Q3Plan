@@ -74,7 +74,7 @@ static int rIntBetween(const int low, const int high)
 }
 
 //============================================================================
-// Graph data structures
+// RRT state graph data structures
 //============================================================================
 
 // forward declarations
@@ -115,11 +115,12 @@ struct svertarray_s
 
 struct sgraph_s
 {
-	svertarray_t states;
+	svertarray_t	states;
+	svert_t			*selected;	// last vertex selected for expansion
 };
 
 //============================================================================
-// svertex_t support routines
+// svertex_t and svertexarray_t support routines
 //============================================================================
 
 /*!
@@ -176,19 +177,90 @@ static void freeSVertArray(svertarray_t * const sva)
 }
 
 //============================================================================
-// svertex_t support routines
+// sedge_t and sedgearray_t support routines
 //============================================================================
 
-static void initSGraph(sgraph_t *sg, const size_t stateArraySize)
+/*!
+ *	constructSEdge
+ *	Properly assigns/copies the given data into corresponding members.
+ */
+static void constructSEdge(sedge_t * const se, 
+						   const usercmd_t * const controls, 
+						   svert_t * const dst)
 {
-	initSArray(&(sg->states), stateArraySize);
+	memcpy(&(se->controls), controls, sizeof(usercmd_t));
+	se->dst = dst;
 }
 
-static void insertSVert(sgraph_t *sg, svert_t *sv)
+/*!
+ *	initSEdgeArray
+ *	Allocates an initial chunk of memory for storage.
+ */
+static void initSEdgeArray(sedgearray_t * const sea, const size_t initialSize)
 {
-	addToSArray(&(sg->states), sv);
+	sea->data = (sedge_t*)malloc(initialSize * sizeof(sedge_t));
+	sea->size = initialSize;
+	sea->used = 0;
 }
 
+/*!
+ *	addToSEdgeArray
+ *	Appends input sedge_t to the current memory chunk, resizing if necessary.
+ */
+static void addToSEdgeArray(sedgearray_t * const sea, 
+							const sedge_t * const elt)
+{
+	if(sea->used == sea->size)
+	{
+		sea->size *= 2;
+		sea->data = (sedge_t*)realloc(sea->data, sea->size * sizeof(sedge_t));
+	}
+
+	memcpy(&sea->data[sea->used++], elt, sizeof(sedge_t));
+}
+
+/*!
+ *	freeSEdgeArray
+ *	free()'s the memory chunk and zeroes the size members.
+ */
+static void freeSEdgeArray(sedgearray_t * const sea)
+{
+	free(sea->data);
+	sea->data = NULL;
+	sea->size = sea->used = 0;
+}
+
+//============================================================================
+// sgraph_t support routines
+//============================================================================
+
+/*!
+ *	initSGraph
+ *	Allocates a chunk of memory for vertex storage and adds an initial vertex.
+ */
+static void initSGraph(sgraph_t * const sg, const svert_t * const initSv)
+{
+	initSVertArray(&(sg->states), 2048);
+	addToSVertArray(&(sg->states), initSv);
+}
+
+/*!
+ *	addToSGraph
+ *	Adds a new vertex to the graph. Responsible for constructing edges from
+ *	from the expansion vertex to the inserted vertex.
+ */
+static void addToSGraph(sgraph_t * const sg, svert_t * const sv)
+{
+	sedge_t newEdge;
+
+	constructSEdge(&newEdge, &(sv->client.pers.cmd), sv);
+	addToSEdgeArray(&(sg->selected->neighbors), &newEdge);
+	addToSVertArray(&(sg->states), sv);
+}
+
+//============================================================================
+// RRT main functions
+//============================================================================
 
 static sgraph_t rrtStateGraph;
 static int lastState;
