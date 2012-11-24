@@ -1579,7 +1579,7 @@ void CG_Particle_OilSlick (qhandle_t pshader, centity_t *cent)
 {
 	cparticle_t	*p;
 	
-  	if (!pshader)
+	if (!pshader)
 		CG_Printf ("CG_Particle_OilSlick == ZERO!\n");
 
 	if (!free_particles)

@@ -104,7 +104,6 @@ struct gentity_s {
 
 	// freemancw - motion planning
 	qboolean	q3p_isPlannerBot;		// is this client being used for motion planning?
-	int			q3p_advanceFrameNum;	// number of frames to apply a random control
 
 	// movers
 	moverState_t moverState;
@@ -707,7 +706,10 @@ void G_Q3P_AdvancePlannerBot( const int n );
 void G_Q3P_SavePlannerBotState( void );
 void G_Q3P_RestorePlannerBotState( void );
 void G_Q3P_SelectRandomControls( usercmd_t *out );
-void G_Q3P_RunPlannerBotRRT( void );
+void G_Q3P_RRTSelectVertex( void );
+void G_Q3P_RRTAddVertex( void );
+void G_Q3P_RunPlannerBotRRT( void ); 
+qboolean G_Q3P_RRTIsRunning( void );
 
 
 // old stuff 

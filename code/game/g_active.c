@@ -1040,18 +1040,26 @@ void G_RunClient( gentity_t *ent ) {
 
 	// freemancw - motion planning
 	if( ent->q3p_isPlannerBot ) {
+
 		// get rid of the phone jack
 		ent->client->lastCmdTime = level.time;
 
-		if( ent->q3p_advanceFrameNum ) {
+		if( G_Q3P_RRTIsRunning() ) {
+			G_AddEvent( ent, EV_VIZ_RRT, 0 );
+			G_Printf("Old: %f %f %f", ent->client->ps.origin[0],
+				ent->client->ps.origin[1], ent->client->ps.origin[2]);
 			ClientThink_real( ent );
-			ent->q3p_advanceFrameNum--;
-		} else {
-			ent->client->ps.commandTime = level.time - 50;
+			G_Printf("New: %f %f %f", ent->client->ps.origin[0],
+				ent->client->ps.origin[1], ent->client->ps.origin[2]);
+			G_Q3P_RRTAddVertex();
 		}
 
 		return;
+
+	} else {
+		ent->client->ps.commandTime = level.time - 50;
 	}
+
 
 	ClientThink_real( ent );
 }

@@ -504,6 +504,58 @@ void CG_PainEvent( centity_t *cent, int health ) {
 }
 
 
+/*
+==============
+CG_VizRRTEvent
+==============
+*/
+static void CG_VizRRTEvent( centity_t *cent ) {
+	vec3_t axis[36], move, move2, vec, temp;
+	float  len;
+	int    i, j, skip;
+ 
+	localEntity_t *le;
+	refEntity_t   *re;
+
+	//CG_Printf("yo!");
+ 
+	le = CG_AllocLocalEntity();
+	re = &le->refEntity;
+ 
+	le->leType = LE_FADE_RGB;
+	le->startTime = cg.time;
+	le->endTime = cg.time + 20000;
+	le->lifeRate = 1.0 / (le->endTime - le->startTime);
+ 
+	re->shaderTime = cg.time / 1000.0f;
+	re->reType = RT_RAIL_CORE;
+	re->customShader = cgs.media.railCoreShader;
+ 
+	/*
+	re->oldorigin[0] = 0.0f;
+	re->oldorigin[1] = 0.0f;
+	re->oldorigin[2] = 0.0f;
+	re->origin[0] = 0.0f;
+	re->origin[1] = 0.0f;
+	re->origin[2] = 32.0f;
+	*/
+	VectorCopy(cent->lerpOrigin, re->oldorigin);
+	VectorCopy(cent->lerpOrigin, re->origin);
+	re->origin[2] += 8.0f;
+ 
+	re->shaderRGBA[0] = 255;
+	re->shaderRGBA[1] = 255;
+	re->shaderRGBA[2] = 255;
+	re->shaderRGBA[3] = 255;
+
+	le->color[0] = 0.7f;
+	le->color[1] = 0.7f;
+	le->color[2] = 0.7f;
+	le->color[3] = 1.0f;
+
+	AxisClear( re->axis );
+}
+
 
 /*
 ==============
@@ -1080,7 +1132,7 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 								CG_AddBufferedSound( cgs.media.enemyTookTheFlagSound );
 							else
 #endif
- 							CG_AddBufferedSound( cgs.media.yourTeamTookEnemyFlagSound );
+							CG_AddBufferedSound( cgs.media.yourTeamTookEnemyFlagSound );
 						}
 					}
 					break;
@@ -1222,6 +1274,11 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 	case EV_DEBUG_LINE:
 		DEBUGNAME("EV_DEBUG_LINE");
 		CG_Beam( cent );
+		break;
+
+	case EV_VIZ_RRT:
+		//CG_Printf("Hey!");
+		CG_VizRRTEvent( cent );
 		break;
 
 	default:

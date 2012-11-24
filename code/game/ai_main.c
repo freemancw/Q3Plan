@@ -529,11 +529,11 @@ void BotSetInfoConfigString(bot_state_t *bs) {
 			break;
 		}
 	}
-  	cs = va("l\\%s\\c\\%s\\a\\%s",
+	cs = va("l\\%s\\c\\%s\\a\\%s",
 				leader,
 				carrying,
 				action);
-  	trap_SetConfigstring (CS_BOTINFO + bs->client, cs);
+	trap_SetConfigstring (CS_BOTINFO + bs->client, cs);
 }
 
 /*
@@ -1429,11 +1429,19 @@ int BotAIStartFrame(int time) {
 			continue;
 		}
 		if( g_entities[i].q3p_isPlannerBot ) {
-			G_Q3P_SelectRandomControls(&(botstates[i]->lastucmd));
+
+			if( G_Q3P_RRTIsRunning() )
+			{
+				G_Q3P_RRTSelectVertex();
+				G_Q3P_SelectRandomControls(&(botstates[i]->lastucmd));
+			}
+
 			botstates[i]->lastucmd.serverTime = time;
 			trap_BotUserCommand(botstates[i]->client, &botstates[i]->lastucmd);
+
 			//retrieve any waiting server commands so the bot doesn't time out
 			while(trap_BotGetServerCommand(i, buf, sizeof(buf)));
+
 			return qtrue;
 		}
 	}

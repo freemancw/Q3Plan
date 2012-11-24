@@ -298,7 +298,8 @@
     </Link>
     <PostBuildEvent>
       <Message>Post build processing..</Message>
-      <Command>rem bash -c "perl ./unix/cons -- debug"</Command>
+      <Command>rem bash -c "perl ./unix/cons -- debug"
+copy /Y "$(TargetDir)/$(TargetFilename)" "$(TargetDir)/../Q3Plan/$(TargetFilename)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

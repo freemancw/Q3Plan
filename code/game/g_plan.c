@@ -4,6 +4,7 @@
  */
 
 #include "g_local.h"
+#include <float.h>
 
 static gentity_t *pBot;
 static int rIntBetween(const int low, const int high);
@@ -23,7 +24,7 @@ void G_Q3P_AdvancePlannerBot(const int n)
 {
 	if(pBot)
 	{
-		pBot->q3p_advanceFrameNum += n;
+		//pBot->q3p_advanceFrameNum += n;
 	}
 }
 
@@ -76,20 +77,33 @@ static int rIntBetween(const int low, const int high)
 // Graph data structures
 //============================================================================
 
+// forward declarations
 typedef struct svert_s svert_t;
 typedef struct svertarray_s svertarray_t;
 typedef struct sedge_s sedge_t;
-typedef struct sedgenode_s sedgenode_t;
+typedef struct sedgearray_s sedgearray_t;
 typedef struct sgraph_s sgraph_t;
+
+struct sedge_s
+{
+	usercmd_t	controls;
+	svert_t		*dst;
+};
+
+struct sedgearray_s
+{
+	sedge_t		*data;
+	size_t		used;
+	size_t		size;
+};
 
 struct svert_s
 {
-	// these should be replaced with lightweight structures
-	gentity_t ent;
-	gclient_t client;
+	//! @todo replace with lightweight structures
+	gentity_t		ent;
+	gclient_t		client;
 
-	// neighbor edge list
-	sedgenode_t *neighbors;
+	sedgearray_t	neighbors;
 };
 
 struct svertarray_s
@@ -99,33 +113,47 @@ struct svertarray_s
 	size_t		size;
 };
 
-struct sedge_s
-{
-	usercmd_t controls;
-
-	// edges are located in src, so no need to store
-	svert_t *dst;
-};
-
-struct sedgenode_s
-{
-	sedge_t				sedge;
-	struct sedgenode_s	*next;
-};
-
 struct sgraph_s
 {
-	svertarray_t	states;
+	svertarray_t states;
 };
 
-static void initSArray(svertarray_t *sva, const size_t initialSize)
+//============================================================================
+// svertex_t support routines
+//============================================================================
+
+/*!
+ *	constructSVert
+ *	Properly assigns/copies the given data into corresponding members.
+ */
+static void constructSVert(svert_t * const sv, const gentity_t * const ent, 
+						   const gclient_t * const client,
+						   const sedgearray_t * const neighbors)
+{
+	memcpy(&(sv->client), client, sizeof(gclient_t));
+	memcpy(&(sv->ent), ent, sizeof(gentity_t));
+	
+	if(neighbors) 
+		sv->neighbors = *neighbors;
+}
+
+/*!
+ *	initSVertArray
+ *	Allocates an initial chunk of memory for storage.
+ */
+static void initSVertArray(svertarray_t * const sva, const size_t initialSize)
 {
 	sva->data = (svert_t*)malloc(initialSize * sizeof(svert_t));
 	sva->size = initialSize;
 	sva->used = 0;
 }
 
-static void addToSArray(svertarray_t *sva, svert_t *elt)
+/*!
+ *	addToSVertArray
+ *	Appends input svert_t to the current memory chunk, resizing if necessary.
+ */
+static void addToSVertArray(svertarray_t * const sva, 
+							const svert_t * const elt)
 {
 	if(sva->used == sva->size)
 	{
@@ -136,12 +164,20 @@ static void addToSArray(svertarray_t *sva, svert_t *elt)
 	memcpy(&sva->data[sva->used++], elt, sizeof(svert_t));
 }
 
-static void freeSArray(svertarray_t *sva)
+/*!
+ *	freeSVertArray
+ *	free()'s the memory chunk and zeroes the size members.
+ */
+static void freeSVertArray(svertarray_t * const sva)
 {
 	free(sva->data);
 	sva->data = NULL;
 	sva->size = sva->used = 0;
 }
+
+//============================================================================
+// svertex_t support routines
+//============================================================================
 
 static void initSGraph(sgraph_t *sg, const size_t stateArraySize)
 {
@@ -153,44 +189,123 @@ static void insertSVert(sgraph_t *sg, svert_t *sv)
 	addToSArray(&(sg->states), sv);
 }
 
-static void createSVert(svert_t *sv, gentity_t *ent, gclient_t *client)
+
+static sgraph_t rrtStateGraph;
+static int lastState;
+static int rrtNumVerts;
+
+/*!
+ *	G_Q3P_RRTSelectVertex
+ */
+void G_Q3P_RRTSelectVertex(void)
 {
-	memcpy(&(sv->client), client, sizeof(gclient_t));
-	memcpy(&(sv->ent), ent, sizeof(gentity_t));
-	sv->neighbors = NULL;
+	int minIdx, i;
+	float minSqDist, sqDistToRandom;
+	vec3_t randomState, vecToRandom;
+
+	// generate a random "state"
+	randomState[0] = (float)rIntBetween(-512,  512);
+	randomState[1] = (float)rIntBetween(-256, 1088);
+	randomState[2] = (float)rIntBetween( -64,  512);
+
+	// find state in graph closest to random state in the 
+	// Euclidean sense
+	minSqDist = FLT_MAX;
+	for(i = 0; i < rrtStateGraph.states.used; i++)
+	{
+		VectorSubtract(rrtStateGraph.states.data[i].client.ps.origin,
+			randomState, vecToRandom);
+		sqDistToRandom = DotProduct(vecToRandom, vecToRandom);
+
+		if(sqDistToRandom < minSqDist)
+		{
+			minSqDist = sqDistToRandom;	
+			minIdx = i;
+		}
+	}
+
+	// restore planner bot state
+	Com_Memcpy(pBot->client, &(rrtStateGraph.states.data[minIdx].client), 
+		sizeof(gclient_t));
+
+	Com_Memcpy(pBot, &(rrtStateGraph.states.data[minIdx].ent), 
+		sizeof(gentity_t));
+
+	lastState = minIdx;
+}
+
+/*!
+ *	G_Q3P_RRTAddVertex
+ */
+void G_Q3P_RRTAddVertex(void)
+{
+	svert_t currentState;
+
+	constructSVert(&currentState, pBot, pBot->client, NULL);
+	insertSVert(&rrtStateGraph, &currentState);
+	rrtNumVerts--;
+
+	if(pBot->client->ps.origin[0] > 336.0f  &&
+	   pBot->client->ps.origin[0] < 432.0f  &&
+	   pBot->client->ps.origin[1] > 912.0f  &&
+	   pBot->client->ps.origin[1] < 1008.0f &&
+	   pBot->client->ps.origin[2] > 256.0f  &&
+	   pBot->client->ps.origin[2] < 344.0f)
+	{
+
+	}
+}
+
+qboolean G_Q3P_RRTIsRunning(void)
+{
+	if(rrtNumVerts > 0) return qtrue; else return qfalse;
 }
 
 /*!
  *	G_Q3P_RunPlannerBotRRT
+ *
+ *	For the first demo, the goal is fixed as a rocket launcher up
+ *	on a ledge. In particular, the bot reaches the goal region if its
+ *	origin is contained within the minkowski sum of the bot's AABB with the
+ *	RL's BBox.
+ *
+ *	Leftmost X:		336
+ *	Rightmost X:	432
+ *	Bottommost Y:	912
+ *	Topmost Y:		1008
+ *	Bottommost Z:	256
+ *	Topmost Z:		344
+ *
+ *	As a first attempt at RRT, I'm just going to randomly generate coordinates
+ *	within the level's AABB and use these to bias the search by performing
+ *	Euclidean nearest neighbor to find the appropriate vertex. 
  */
 void G_Q3P_RunPlannerBotRRT(void)
 {
-	sgraph_t stateGraph;
+	int i, minIdx;
+	float distToRandom, minDist;
 	svert_t stateInit;
 	svert_t stateGoal;
+	vec3_t randomState, vecToRandom;
 
 	int areaNum;
 
 	G_Printf("Running PlannerBot RRT\n");
 
 	// init the graph with 512 state slots
-	initSGraph(&stateGraph, 512);
+	initSGraph(&rrtStateGraph, 512);
+
+	// for now, let's just add 2048 states to the graph and see what happens
+	rrtNumVerts = 2048;
 	
-	// create the initial state from wherever the bot is currently
-	createSVert(&stateInit, pBot, pBot->client);
+	// construct the initial state from wherever the bot is currently
+	constructSVert(&stateInit, pBot, pBot->client, NULL);
 
 	// add initial state to graph
-	insertSVert(&stateGraph, &stateInit);
+	insertSVert(&rrtStateGraph, &stateInit);
 
-	areaNum = trap_AAS_PointAreaNum(pBot->client->ps.origin);
-	G_Printf("%d\n", areaNum);
-
-	/*
-	while(qtrue)
-	{
-		// generate a random state
-	}
-	*/
+	//areaNum = trap_AAS_PointAreaNum(pBot->client->ps.origin);
+	//G_Printf("%d\n", areaNum);
 }
 
 //============================================================================
@@ -225,8 +340,17 @@ kcelldata_t;
 
 typedef struct
 {
-	// contains celldata, this isn't correct
+	// integer array
+	int x, y, z;
+}
+kcoord_t;
+
+typedef struct
+{
+	// contains celldata array, this isn't correct
 	kcelldata_t cellData;
+	size_t	dimension;
+	size_t	maxNeighbors;
 }
 kgrid_t;
 
@@ -239,3 +363,11 @@ typedef struct
 	float selectBorderFraction;
 }
 kdiscretization_t;
+
+/*!
+ *	G_Q3P_RunPlannerBotKPIECE
+ */
+void G_Q3P_RunPlannerBotKPIECE(void)
+{
+
+}
