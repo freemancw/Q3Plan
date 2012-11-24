@@ -48,10 +48,7 @@ static gentity_t savedState;
 static struct gclient_s savedClient;
 void G_Q3P_SavePlannerBotState(void)
 {
-	//Com_Memset(&savedState, 0, sizeof(gentity_t));
-	//Com_Memset(&savedClient, 0, sizeof(struct gclient_s));
-
-	Com_Memcpy(&savedClient, pBot->client, sizeof(struct gclient_s));
+	Com_Memcpy(&savedClient, pBot->client, sizeof(gclient_t));
 	Com_Memcpy(&savedState, pBot, sizeof(gentity_t));
 }
 
@@ -262,52 +259,61 @@ static void addToSGraph(sgraph_t * const sg, svert_t * const sv)
 	addToSVertArray(&(sg->states), sv);
 }
 
+/*!
+ *	selectNNFromSGraph
+ *	Currently takes as input a random point bias and returns the Euclidean
+ *	nearest neighbor using linear search.
+ */
+static svert_t* selectNNFromSGraph(sgraph_t * const sg, const vec3_t bias)
+{
+	size_t i, nnIdx;
+	float minSqDist, sqDistToRandom;
+	vec3_t vecToRandom;
+
+	// find state in graph closest to bias using Euclidean distance
+	minSqDist = FLT_MAX;
+	for(i = 0; i < sg->states.used; i++)
+	{
+		VectorSubtract(sg->states.data[i].client.ps.origin, bias, vecToRandom);
+		sqDistToRandom = DotProduct(vecToRandom, vecToRandom);
+
+		if(sqDistToRandom < minSqDist)
+		{
+			minSqDist = sqDistToRandom;	
+			nnIdx = i;
+		}
+	}
+
+	sg->lastSelected = sg->states.data + nnIdx;
+	return sg->states.data + nnIdx;
+}
+
+
 //============================================================================
 // RRT main functions
 //============================================================================
 
 static sgraph_t rrtStateGraph;
-static int lastState;
-static int rrtNumVerts;
+static qboolean rrtIsRunning;
 
 /*!
  *	G_Q3P_RRTSelectVertex
  */
 void G_Q3P_RRTSelectVertex(void)
 {
-	int minIdx, i;
-	float minSqDist, sqDistToRandom;
-	vec3_t randomState, vecToRandom;
+	vec3_t randomState;
+	svert_t *closestVertex;
 
-	// generate a random "state"
+	// generate a "random state"
 	randomState[0] = (float)rIntBetween(-512,  512);
 	randomState[1] = (float)rIntBetween(-256, 1088);
 	randomState[2] = (float)rIntBetween( -64,  512);
 
-	// find state in graph closest to random state in the 
-	// Euclidean sense
-	minSqDist = FLT_MAX;
-	for(i = 0; i < rrtStateGraph.states.used; i++)
-	{
-		VectorSubtract(rrtStateGraph.states.data[i].client.ps.origin,
-			randomState, vecToRandom);
-		sqDistToRandom = DotProduct(vecToRandom, vecToRandom);
-
-		if(sqDistToRandom < minSqDist)
-		{
-			minSqDist = sqDistToRandom;	
-			minIdx = i;
-		}
-	}
+	closestVertex = selectNNFromSGraph(&rrtStateGraph, randomState);
 
 	// restore planner bot state
-	Com_Memcpy(pBot->client, &(rrtStateGraph.states.data[minIdx].client), 
-		sizeof(gclient_t));
-
-	Com_Memcpy(pBot, &(rrtStateGraph.states.data[minIdx].ent), 
-		sizeof(gentity_t));
-
-	lastState = minIdx;
+	Com_Memcpy(pBot->client, &(closestVertex->client), sizeof(gclient_t));
+	Com_Memcpy(pBot, &(closestVertex->ent), sizeof(gentity_t));
 }
 
 /*!
@@ -319,7 +325,6 @@ void G_Q3P_RRTAddVertex(void)
 
 	constructSVert(&currentState, pBot, pBot->client, NULL);
 	addToSGraph(&rrtStateGraph, &currentState);
-	rrtNumVerts--;
 
 	if(pBot->client->ps.origin[0] > 336.0f  &&
 	   pBot->client->ps.origin[0] < 432.0f  &&
@@ -328,13 +333,14 @@ void G_Q3P_RRTAddVertex(void)
 	   pBot->client->ps.origin[2] > 256.0f  &&
 	   pBot->client->ps.origin[2] < 344.0f)
 	{
+		rrtIsRunning = qfalse;
 
 	}
 }
 
 qboolean G_Q3P_RRTIsRunning(void)
 {
-	if(rrtNumVerts > 0) return qtrue; else return qfalse;
+	return qfalse;
 }
 
 /*!
