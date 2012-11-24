@@ -459,10 +459,10 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 #ifdef MISSIONPACK
 	if( bg_itemlist[client->ps.stats[STAT_PERSISTANT_POWERUP]].giTag == PW_AMMOREGEN ) {
 		int w, max, inc, t, i;
-    int weapList[]={WP_MACHINEGUN,WP_SHOTGUN,WP_GRENADE_LAUNCHER,WP_ROCKET_LAUNCHER,WP_LIGHTNING,WP_RAILGUN,WP_PLASMAGUN,WP_BFG,WP_NAILGUN,WP_PROX_LAUNCHER,WP_CHAINGUN};
-    int weapCount = ARRAY_LEN( weapList );
+	int weapList[]={WP_MACHINEGUN,WP_SHOTGUN,WP_GRENADE_LAUNCHER,WP_ROCKET_LAUNCHER,WP_LIGHTNING,WP_RAILGUN,WP_PLASMAGUN,WP_BFG,WP_NAILGUN,WP_PROX_LAUNCHER,WP_CHAINGUN};
+	int weapCount = ARRAY_LEN( weapList );
 		//
-    for (i = 0; i < weapCount; i++) {
+	for (i = 0; i < weapCount; i++) {
 		  w = weapList[i];
 
 		  switch(w) {
@@ -491,7 +491,7 @@ void ClientTimerActions( gentity_t *ent, int msec ) {
 				  client->ps.ammo[w] = max;
 			  }
 		  }
-    }
+	}
 	}
 #endif
 }
@@ -1030,38 +1030,33 @@ void ClientThink( int clientNum ) {
 }
 
 
-void G_RunClient( gentity_t *ent ) {
-
-	if ( !(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer ) {
+void G_RunClient(gentity_t *ent) 
+{
+	if(!(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer) 
 		return;
-	}
 
 	ent->client->pers.cmd.serverTime = level.time;
 
-	// freemancw - motion planning
-	if( ent->q3p_isPlannerBot ) {
-
+	if(ent->q3p_isPlannerBot) 
+	{
 		// get rid of the phone jack
 		ent->client->lastCmdTime = level.time;
 
-		if( G_Q3P_RRTIsRunning() ) {
-			G_AddEvent( ent, EV_VIZ_RRT, 0 );
-			G_Printf("Old: %f %f %f", ent->client->ps.origin[0],
-				ent->client->ps.origin[1], ent->client->ps.origin[2]);
-			ClientThink_real( ent );
-			G_Printf("New: %f %f %f", ent->client->ps.origin[0],
-				ent->client->ps.origin[1], ent->client->ps.origin[2]);
+		if(G_Q3P_RRTIsRunning()) 
+		{
+			G_AddEvent(ent, EV_VIZ_RRT, 0);
+			ClientThink_real(ent);
 			G_Q3P_RRTAddVertex();
 		}
 
 		return;
-
-	} else {
+	} 
+	else 
+	{
 		ent->client->ps.commandTime = level.time - 50;
 	}
 
-
-	ClientThink_real( ent );
+	ClientThink_real(ent);
 }
 
 

@@ -1421,16 +1421,17 @@ int BotAIStartFrame(int time) {
 	}
 
 	// freemancw - motion planning
-	for( i = 0; i < MAX_CLIENTS; i++ ) {
-		if( !botstates[i] || !botstates[i]->inuse ) {
+	for(i = 0; i < MAX_CLIENTS; i++) 
+	{
+		if(!botstates[i] || !botstates[i]->inuse)
 			continue;
-		}
-		if( g_entities[i].client->pers.connected != CON_CONNECTED ) {
-			continue;
-		}
-		if( g_entities[i].q3p_isPlannerBot ) {
 
-			if( G_Q3P_RRTIsRunning() )
+		if(g_entities[i].client->pers.connected != CON_CONNECTED)
+			continue;
+
+		if(g_entities[i].q3p_isPlannerBot) 
+		{
+			if(G_Q3P_RRTIsRunning())
 			{
 				G_Q3P_RRTSelectVertex();
 				G_Q3P_SelectRandomControls(&(botstates[i]->lastucmd));
