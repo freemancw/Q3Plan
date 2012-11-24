@@ -116,7 +116,7 @@ struct svertarray_s
 struct sgraph_s
 {
 	svertarray_t	states;
-	svert_t			*selected;	// last vertex selected for expansion
+	svert_t			*lastSelected;	// last vertex selected for expansion
 };
 
 //============================================================================
@@ -152,8 +152,9 @@ static void initSVertArray(svertarray_t * const sva, const size_t initialSize)
 /*!
  *	addToSVertArray
  *	Appends input svert_t to the current memory chunk, resizing if necessary.
+ *	Returns pointer to new elt in array.
  */
-static void addToSVertArray(svertarray_t * const sva, 
+static svert_t* addToSVertArray(svertarray_t * const sva, 
 							const svert_t * const elt)
 {
 	if(sva->used == sva->size)
@@ -162,7 +163,8 @@ static void addToSVertArray(svertarray_t * const sva,
 		sva->data = (svert_t*)realloc(sva->data, sva->size * sizeof(svert_t));
 	}
 
-	memcpy(&sva->data[sva->used++], elt, sizeof(svert_t));
+	memcpy(sva->data + sva->used, elt, sizeof(svert_t));
+	return sva->data + sva->used++;
 }
 
 /*!
@@ -206,9 +208,10 @@ static void initSEdgeArray(sedgearray_t * const sea, const size_t initialSize)
 /*!
  *	addToSEdgeArray
  *	Appends input sedge_t to the current memory chunk, resizing if necessary.
+ *	Returns pointer to new elt in the array.
  */
-static void addToSEdgeArray(sedgearray_t * const sea, 
-							const sedge_t * const elt)
+static sedge_t* addToSEdgeArray(sedgearray_t * const sea, 
+								const sedge_t * const elt)
 {
 	if(sea->used == sea->size)
 	{
@@ -216,7 +219,8 @@ static void addToSEdgeArray(sedgearray_t * const sea,
 		sea->data = (sedge_t*)realloc(sea->data, sea->size * sizeof(sedge_t));
 	}
 
-	memcpy(&sea->data[sea->used++], elt, sizeof(sedge_t));
+	memcpy(sea->data + sea->used, elt, sizeof(sedge_t));
+	return sea->data + sea->used++;
 }
 
 /*!
@@ -241,7 +245,7 @@ static void freeSEdgeArray(sedgearray_t * const sea)
 static void initSGraph(sgraph_t * const sg, const svert_t * const initSv)
 {
 	initSVertArray(&(sg->states), 2048);
-	addToSVertArray(&(sg->states), initSv);
+	sg->lastSelected = addToSVertArray(&(sg->states), initSv);
 }
 
 /*!
@@ -254,7 +258,7 @@ static void addToSGraph(sgraph_t * const sg, svert_t * const sv)
 	sedge_t newEdge;
 
 	constructSEdge(&newEdge, &(sv->client.pers.cmd), sv);
-	addToSEdgeArray(&(sg->selected->neighbors), &newEdge);
+	addToSEdgeArray(&(sg->lastSelected->neighbors), &newEdge);
 	addToSVertArray(&(sg->states), sv);
 }
 
@@ -314,7 +318,7 @@ void G_Q3P_RRTAddVertex(void)
 	svert_t currentState;
 
 	constructSVert(&currentState, pBot, pBot->client, NULL);
-	insertSVert(&rrtStateGraph, &currentState);
+	addToSGraph(&rrtStateGraph, &currentState);
 	rrtNumVerts--;
 
 	if(pBot->client->ps.origin[0] > 336.0f  &&
@@ -354,92 +358,13 @@ qboolean G_Q3P_RRTIsRunning(void)
  */
 void G_Q3P_RunPlannerBotRRT(void)
 {
-	int i, minIdx;
-	float distToRandom, minDist;
-	svert_t stateInit;
-	svert_t stateGoal;
-	vec3_t randomState, vecToRandom;
-
-	int areaNum;
+	svert_t initState;
 
 	G_Printf("Running PlannerBot RRT\n");
-
-	// init the graph with 512 state slots
-	initSGraph(&rrtStateGraph, 512);
-
-	// for now, let's just add 2048 states to the graph and see what happens
-	rrtNumVerts = 2048;
 	
 	// construct the initial state from wherever the bot is currently
-	constructSVert(&stateInit, pBot, pBot->client, NULL);
+	constructSVert(&initState, pBot, pBot->client, NULL);
 
 	// add initial state to graph
-	insertSVert(&rrtStateGraph, &stateInit);
-
-	//areaNum = trap_AAS_PointAreaNum(pBot->client->ps.origin);
-	//G_Printf("%d\n", areaNum);
-}
-
-//============================================================================
-// KPIECE data structures
-//============================================================================
-
-typedef struct
-{
-	gentity_t ent;
-	gclient_t client;
-} 
-kstate_t;
-
-typedef struct
-{
-	kstate_t	startState;
-	usercmd_t	controls;
-	size_t		duration; // number of frames to run
-}
-kmotion_t;
-
-typedef struct
-{
-	// contains array of motions
-	float coverage;
-	size_t selections;
-	float score;
-	size_t iteration;
-	float importance;
-}
-kcelldata_t;
-
-typedef struct
-{
-	// integer array
-	int x, y, z;
-}
-kcoord_t;
-
-typedef struct
-{
-	// contains celldata array, this isn't correct
-	kcelldata_t cellData;
-	size_t	dimension;
-	size_t	maxNeighbors;
-}
-kgrid_t;
-
-typedef struct
-{
-	kgrid_t grid;
-	kcelldata_t *recentCell;
-	size_t	size;
-	size_t	iteration;
-	float selectBorderFraction;
-}
-kdiscretization_t;
-
-/*!
- *	G_Q3P_RunPlannerBotKPIECE
- */
-void G_Q3P_RunPlannerBotKPIECE(void)
-{
-
+	initSGraph(&rrtStateGraph, &initState);
 }
