@@ -509,38 +509,25 @@ void CG_PainEvent( centity_t *cent, int health ) {
 CG_VizRRTEvent
 ==============
 */
-static void CG_VizRRTEvent( centity_t *cent ) {
-	vec3_t axis[36], move, move2, vec, temp;
-	float  len;
-	int    i, j, skip;
- 
+static void CG_VizRRTEvent(centity_t *cent) 
+{
 	localEntity_t *le;
 	refEntity_t   *re;
-
-	//CG_Printf("yo!");
  
 	le = CG_AllocLocalEntity();
 	re = &le->refEntity;
  
 	le->leType = LE_FADE_RGB;
 	le->startTime = cg.time;
-	le->endTime = cg.time + 20000;
-	le->lifeRate = 1.0 / (le->endTime - le->startTime);
+	le->endTime = cg.time + 100000;
+	le->lifeRate = 1.0f / (le->endTime - le->startTime);
  
 	re->shaderTime = cg.time / 1000.0f;
-	re->reType = RT_RAIL_CORE;
-	re->customShader = cgs.media.railCoreShader;
+	re->reType = RT_SPRITE;
+	re->radius = 4;
+	re->customShader = cgs.media.plasmaBallShader;
  
-	/*
-	re->oldorigin[0] = 0.0f;
-	re->oldorigin[1] = 0.0f;
-	re->oldorigin[2] = 0.0f;
-	re->origin[0] = 0.0f;
-	re->origin[1] = 0.0f;
-	re->origin[2] = 32.0f;
-	*/
-	VectorCopy(cent->lerpOrigin, re->oldorigin);
-	VectorCopy(cent->lerpOrigin, re->origin);
+	VectorCopy(cent->currentState.origin, re->origin);
 	re->origin[2] += 8.0f;
  
 	re->shaderRGBA[0] = 255;
@@ -552,8 +539,6 @@ static void CG_VizRRTEvent( centity_t *cent ) {
 	le->color[1] = 0.7f;
 	le->color[2] = 0.7f;
 	le->color[3] = 1.0f;
-
-	AxisClear( re->axis );
 }
 
 

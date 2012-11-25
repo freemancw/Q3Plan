@@ -8,6 +8,7 @@
 
 static gentity_t *pBot;
 static int rIntBetween(const int low, const int high);
+static void printVec3(vec3_t out);
 
 /*!
  *	G_Q3P_SpawnPlannerBot
@@ -68,6 +69,11 @@ void G_Q3P_RestorePlannerBotState(void)
 static int rIntBetween(const int low, const int high) 
 {
 	return low + (rand() % (int)(high - low + 1));
+}
+
+static void printVec3(vec3_t out)
+{
+	G_Printf("x %f, y %f, z %f\n", out[0], out[1], out[2]);
 }
 
 //============================================================================
@@ -440,6 +446,14 @@ void G_Q3P_RRTSelectVertex(void)
 	// restore planner bot state
 	Com_Memcpy(pBot->client, &(closestVertex->client), sizeof(gclient_t));
 	Com_Memcpy(pBot, &(closestVertex->ent), sizeof(gentity_t));
+
+	// restore times
+	pBot->client->ps.commandTime = level.time;
+	pBot->client->pers.cmd.serverTime = level.time;
+
+	printVec3(pBot->client->ps.origin);
+	VectorCopy(pBot->client->ps.origin, pBot->s.origin); 
+	G_AddEvent(pBot, EV_VIZ_RRT, 0);
 }
 
 /*!
