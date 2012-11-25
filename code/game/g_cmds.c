@@ -1592,17 +1592,6 @@ void Cmd_Stats_f( gentity_t *ent ) {
 
 /*
 =========================
-Cmd_Q3P_GenRandomSample_f
-=========================
-*/
-void Cmd_Q3P_GenRandomSample_f(gentity_t *ent) 
-{
-	G_Printf("Cmd_Q3P_GenRandomSample_f\n");
-	//G_Q3P_GenRandomSample();
-}
-
-/*
-=========================
 Cmd_Q3P_SpawnPlannerBot_f
 =========================
 */
@@ -1614,10 +1603,10 @@ void Cmd_Q3P_SpawnPlannerBot_f(gentity_t *ent)
 
 /*
 ===========================
-Cmd_Q3P_AdvancePlannerBot_f
+Cmd_Q3P_RRTRunDebugFrames_f
 ===========================
 */
-void Cmd_Q3P_AdvancePlannerBot_f(gentity_t *ent) 
+void Cmd_Q3P_RRTRunDebugFrames_f(gentity_t *ent) 
 {
 	int	n;
 	char buffer[MAX_TOKEN_CHARS];
@@ -1632,37 +1621,17 @@ void Cmd_Q3P_AdvancePlannerBot_f(gentity_t *ent)
 		n = atoi(buffer);
 	}
 	
-	G_Q3P_AdvancePlannerBot(n);
+	G_Q3P_RRTRunDebugFrames(n);
 }
 
 /*
-=============================
-Cmd_Q3P_SavePlannerBotState_f
-=============================
+===========================
+Cmd_Q3P_RRTStartAlgorithm_f
+===========================
 */
-void Cmd_Q3P_SavePlannerBotState_f(gentity_t *ent)
+void Cmd_Q3P_RRTStartAlgorithm_f(gentity_t *ent)
 {
-	G_Q3P_SavePlannerBotState();
-}
-
-/*
-================================
-Cmd_Q3P_RestorePlannerBotState_f
-================================
-*/
-void Cmd_Q3P_RestorePlannerBotState_f(gentity_t *ent)
-{
-	G_Q3P_RestorePlannerBotState();
-}
-
-/*
-================================
-Cmd_Q3P_RunPlannerBotRRT_f
-================================
-*/
-void Cmd_Q3P_RunPlannerBotRRT_f(gentity_t *ent)
-{
-	G_Q3P_RunPlannerBotRRT(); 
+	G_Q3P_RRTStartAlgorithm(qtrue); 
 }
 
 /*
@@ -1775,18 +1744,12 @@ void ClientCommand( int clientNum ) {
 		Cmd_Stats_f( ent );
 	
 	// freemancw - Q3Plan
-	else if (Q_stricmp (cmd, "q3p_genrandomsample") == 0)
-		Cmd_Q3P_GenRandomSample_f( ent );
 	else if (Q_stricmp (cmd, "q3p_spawnplannerbot") == 0)
 		Cmd_Q3P_SpawnPlannerBot_f( ent );
-	else if (Q_stricmp (cmd, "q3p_advanceplannerbot") == 0)
-		Cmd_Q3P_AdvancePlannerBot_f( ent );
-	else if (Q_stricmp (cmd, "q3p_saveplannerbotstate") == 0)
-		Cmd_Q3P_SavePlannerBotState_f( ent );
-	else if (Q_stricmp (cmd, "q3p_restoreplannerbotstate") == 0)
-		Cmd_Q3P_RestorePlannerBotState_f( ent );
-	else if (Q_stricmp (cmd, "q3p_runplannerbotrrt") == 0)
-		Cmd_Q3P_RunPlannerBotRRT_f( ent );
+	else if (Q_stricmp (cmd, "q3p_rrtstartalgorithm") == 0)
+		Cmd_Q3P_RRTStartAlgorithm_f( ent );
+	else if (Q_stricmp (cmd, "q3p_rrtrundebugframes") == 0)
+		Cmd_Q3P_RRTRunDebugFrames_f( ent );
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
 }

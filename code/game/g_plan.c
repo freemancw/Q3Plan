@@ -389,13 +389,18 @@ static size_t* shortestPathInSGraph(const sgraph_t * const sg)
 
 struct
 {
-	sgraph_t sGraph;
-	qboolean isRunning;
+	sgraph_t	sGraph;
+	qboolean	isRunning;
 } 
 static rrt;
 
+size_t	rrtDebugFrames;	
+
 /*!
  *	G_Q3P_RRTSelectVertex
+ *	As a first attempt at RRT, I'm just going to randomly generate coordinates
+ *	within the level's AABB and use these to bias the search by performing
+ *	Euclidean nearest neighbor to find the appropriate vertex. 
  */
 void G_Q3P_RRTSelectVertex(void)
 {
@@ -416,6 +421,16 @@ void G_Q3P_RRTSelectVertex(void)
 
 /*!
  *	G_Q3P_RRTAddVertex
+ *	For the first demo, the goal is fixed as a rocket launcher up on a ledge. 
+ *	In particular, the bot reaches the goal region if its origin is contained 
+ *	within the Minkowski sum of the bot's AABB with the RL's BBox.
+ *
+ *	Leftmost X:		336
+ *	Rightmost X:	432
+ *	Bottommost Y:	912
+ *	Topmost Y:		1008
+ *	Bottommost Z:	256
+ *	Topmost Z:		344
  */
 void G_Q3P_RRTAddVertex(void)
 {
@@ -424,6 +439,9 @@ void G_Q3P_RRTAddVertex(void)
 	constructSVert(&currentState, pBot, pBot->client, NULL);
 	addToSGraph(&(rrt.sGraph), &currentState);
 
+	if(!rrt.isRunning) return;
+
+	/*
 	if(pBot->client->ps.origin[0] > 336.0f  &&
 	   pBot->client->ps.origin[0] < 432.0f  &&
 	   pBot->client->ps.origin[1] > 912.0f  &&
@@ -434,33 +452,31 @@ void G_Q3P_RRTAddVertex(void)
 		rrt.isRunning = qfalse;
 
 	}
+	*/
 }
 
+/*!
+ *	G_Q3P_RRTRunDebugFrames
+ */
+void G_Q3P_RRTRunDebugFrames(const size_t n)
+{
+	if(rrt.isRunning) return;
+
+	rrtDebugFrames += n;
+}
+
+/*!
+ *	G_Q3P_RRTIsRunning
+ */
 qboolean G_Q3P_RRTIsRunning(void)
 {
 	return rrt.isRunning;
 }
 
 /*!
- *	G_Q3P_RunPlannerBotRRT
- *
- *	For the first demo, the goal is fixed as a rocket launcher up
- *	on a ledge. In particular, the bot reaches the goal region if its
- *	origin is contained within the minkowski sum of the bot's AABB with the
- *	RL's BBox.
- *
- *	Leftmost X:		336
- *	Rightmost X:	432
- *	Bottommost Y:	912
- *	Topmost Y:		1008
- *	Bottommost Z:	256
- *	Topmost Z:		344
- *
- *	As a first attempt at RRT, I'm just going to randomly generate coordinates
- *	within the level's AABB and use these to bias the search by performing
- *	Euclidean nearest neighbor to find the appropriate vertex. 
+ *	G_Q3P_RRTStartAlgorithm
  */
-void G_Q3P_RunPlannerBotRRT(void)
+void G_Q3P_RRTStartAlgorithm(qboolean debug)
 {
 	svert_t initState;
 
@@ -471,6 +487,11 @@ void G_Q3P_RunPlannerBotRRT(void)
 
 	// add initial state to graph
 	initSGraph(&(rrt.sGraph), &initState);
+
+	if(!debug)
+		rrt.isRunning = qtrue;
+	else
+		rrt.isRunning = qfalse;
 }
 
 //============================================================================

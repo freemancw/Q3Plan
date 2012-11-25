@@ -1431,16 +1431,18 @@ int BotAIStartFrame(int time) {
 
 		if(g_entities[i].q3p_isPlannerBot) 
 		{
-			if(G_Q3P_RRTIsRunning())
+			if(G_Q3P_RRTIsRunning() || rrtDebugFrames)
 			{
 				G_Q3P_RRTSelectVertex();
 				G_Q3P_SelectRandomControls(&(botstates[i]->lastucmd));
 			}
 
 			botstates[i]->lastucmd.serverTime = time;
+
+			// this triggers a call to clientthink
 			trap_BotUserCommand(botstates[i]->client, &botstates[i]->lastucmd);
 
-			//retrieve any waiting server commands so the bot doesn't time out
+			// retrieve any waiting server commands so the bot doesn't time out
 			while(trap_BotGetServerCommand(i, buf, sizeof(buf)));
 
 			return qtrue;

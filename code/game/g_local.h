@@ -696,36 +696,21 @@ void BotTestAAS(vec3_t origin);
 #include "g_team.h" // teamplay specific stuff
 
 
-//
+//============================================================================
 // g_plan.c
-//
+//============================================================================
 
-// new stuff
-void G_Q3P_SpawnPlannerBot( void );
-void G_Q3P_AdvancePlannerBot( const int n );
-void G_Q3P_SavePlannerBotState( void );
-void G_Q3P_RestorePlannerBotState( void );
-void G_Q3P_SelectRandomControls( usercmd_t *out );
-void G_Q3P_RRTSelectVertex( void );
-void G_Q3P_RRTAddVertex( void );
-void G_Q3P_RunPlannerBotRRT( void ); 
-qboolean G_Q3P_RRTIsRunning( void );
+void G_Q3P_SpawnPlannerBot(void);
+void G_Q3P_SelectRandomControls(usercmd_t *out);
+void G_Q3P_RRTSelectVertex(void);
+void G_Q3P_RRTAddVertex(void);
+void G_Q3P_RRTStartAlgorithm(qboolean debug); 
+void G_Q3P_RRTRunDebugFrames(const size_t n);
+qboolean G_Q3P_RRTIsRunning(void);
 
+extern size_t rrtDebugFrames;
 
-// old stuff 
-typedef struct 
-{
-	gentity_t gState;
-	struct gclient_s gClient;
-} 
-Q3P_State_t;
-
-Q3P_State_t* G_Q3P_SelectState( void );
-void G_Q3P_CreateState( gentity_t* ent, Q3P_State_t* state );
-void G_Q3P_AddState( Q3P_State_t *newState ); 
-void G_Q3P_SelectControls( usercmd_t* out );
-void G_Q3P_GenRandomSample( void );
-
+//============================================================================
 
 extern	level_locals_t	level;
 extern	gentity_t		g_entities[MAX_GENTITIES];

@@ -1042,11 +1042,14 @@ void G_RunClient(gentity_t *ent)
 		// get rid of the phone jack
 		ent->client->lastCmdTime = level.time;
 
-		if(G_Q3P_RRTIsRunning()) 
+		if(G_Q3P_RRTIsRunning() || rrtDebugFrames)
 		{
 			G_AddEvent(ent, EV_VIZ_RRT, 0);
 			ClientThink_real(ent);
 			G_Q3P_RRTAddVertex();
+
+			if(rrtDebugFrames)
+				rrtDebugFrames--;
 		}
 
 		return;
