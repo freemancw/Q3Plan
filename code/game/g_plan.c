@@ -122,6 +122,27 @@ struct sgraph_s
 	svert_t			*lastSelected;	// last vertex selected for expansion
 };
 
+static void constructSVert(svert_t * const sv, const gentity_t * const ent, 
+						   const gclient_t * const client, 
+						   const sedgearray_t * const neighbors);
+static void initSVertArray(svertarray_t * const sva, 
+						   const size_t initialSize);
+static svert_t* addToSVertArray(svertarray_t * const sva, 
+								const svert_t * const elt);
+static void freeSVertArray(svertarray_t * const sva);
+static void constructSEdge(sedge_t * const se, 
+						   const usercmd_t * const controls, 
+						   const size_t duration, svert_t * const dst);
+static void initSEdgeArray(sedgearray_t * const sea, 
+						   const size_t initialSize);
+static sedge_t* addToSEdgeArray(sedgearray_t * const sea, 
+								const sedge_t * const elt);
+static void freeSEdgeArray(sedgearray_t * const sea);
+static void initSGraph(sgraph_t * const sg, const svert_t * const initSv);
+static void addToSGraph(sgraph_t * const sg, svert_t * const sv);
+static svert_t* selectNNFromSGraph(sgraph_t * const sg, const vec3_t bias);
+static size_t* shortestPathInSGraph(const sgraph_t * const sg);
+
 //============================================================================
 // svertex_t and svertexarray_t support routines
 //============================================================================
@@ -145,6 +166,8 @@ static void constructSVert(svert_t * const sv, const gentity_t * const ent,
 
 	if(neighbors) 
 		sv->neighbors = *neighbors;
+	else
+		initSEdgeArray(&(sv->neighbors), 16);
 }
 
 /*!
