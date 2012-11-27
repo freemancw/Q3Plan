@@ -760,6 +760,10 @@ typedef struct {
 	qhandle_t	holeMarkShader;
 	qhandle_t	energyMarkShader;
 
+	// freemancw - motion planning
+	qhandle_t	q3p_stateVertexShader;
+	qhandle_t	q3p_stateEdgeShader;
+
 	// powerup shaders
 	qhandle_t	quadShader;
 	qhandle_t	redQuadShader;

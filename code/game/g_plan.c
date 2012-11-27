@@ -451,9 +451,8 @@ void G_Q3P_RRTSelectVertex(void)
 	pBot->client->ps.commandTime = level.time;
 	pBot->client->pers.cmd.serverTime = level.time;
 
-	printVec3(pBot->client->ps.origin);
+	// for presentation purposes
 	VectorCopy(pBot->client->ps.origin, pBot->s.origin); 
-	G_AddEvent(pBot, EV_VIZ_RRT, 0);
 }
 
 /*!
@@ -475,6 +474,9 @@ void G_Q3P_RRTAddVertex(void)
 
 	constructSVert(&currentState, pBot, pBot->client, NULL);
 	addToSGraph(&(rrt.sGraph), &currentState);
+
+	VectorCopy(pBot->client->ps.origin, pBot->s.origin2);
+	G_AddEvent(pBot, EV_VIZ_RRT, 0);
 
 	if(!rrt.isRunning) return;
 

@@ -1061,16 +1061,16 @@ static ID_INLINE void R_Radix( int byte, int size, drawSurf_t *source, drawSurf_
   sortKey = ( (unsigned char *)&source[ 0 ].sort ) + byte;
   end = sortKey + ( size * sizeof( drawSurf_t ) );
   for( ; sortKey < end; sortKey += sizeof( drawSurf_t ) )
-    ++count[ *sortKey ];
+	++count[ *sortKey ];
 
   index[ 0 ] = 0;
 
   for( i = 1; i < 256; ++i )
-    index[ i ] = index[ i - 1 ] + count[ i - 1 ];
+	index[ i ] = index[ i - 1 ] + count[ i - 1 ];
 
   sortKey = ( (unsigned char *)&source[ 0 ].sort ) + byte;
   for( i = 0; i < size; ++i, sortKey += sizeof( drawSurf_t ) )
-    dest[ index[ *sortKey ]++ ] = source[ i ];
+	dest[ index[ *sortKey ]++ ] = source[ i ];
 }
 
 /*
@@ -1201,7 +1201,7 @@ void R_AddEntitySurfaces (void) {
 	}
 
 	for ( tr.currentEntityNum = 0; 
-	      tr.currentEntityNum < tr.refdef.num_entities; 
+		  tr.currentEntityNum < tr.refdef.num_entities; 
 		  tr.currentEntityNum++ ) {
 		ent = tr.currentEntity = &tr.refdef.entities[tr.currentEntityNum];
 

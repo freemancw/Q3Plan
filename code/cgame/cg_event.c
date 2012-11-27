@@ -511,34 +511,58 @@ CG_VizRRTEvent
 */
 static void CG_VizRRTEvent(centity_t *cent) 
 {
-	localEntity_t *le;
-	refEntity_t   *re;
- 
-	le = CG_AllocLocalEntity();
-	re = &le->refEntity;
- 
-	le->leType = LE_FADE_RGB;
-	le->startTime = cg.time;
-	le->endTime = cg.time + 100000;
-	le->lifeRate = 1.0f / (le->endTime - le->startTime);
- 
-	re->shaderTime = cg.time / 1000.0f;
-	re->reType = RT_SPRITE;
-	re->radius = 4;
-	re->customShader = cgs.media.plasmaBallShader;
- 
-	VectorCopy(cent->currentState.origin, re->origin);
-	re->origin[2] += 8.0f;
- 
-	re->shaderRGBA[0] = 255;
-	re->shaderRGBA[1] = 255;
-	re->shaderRGBA[2] = 255;
-	re->shaderRGBA[3] = 255;
+	localEntity_t	*sVert, *sEdge;
 
-	le->color[0] = 0.7f;
-	le->color[1] = 0.7f;
-	le->color[2] = 0.7f;
-	le->color[3] = 1.0f;
+	// setup the state vertex dot
+	sVert = CG_AllocLocalEntity();
+	sVert->leType = LE_FADE_RGB;
+	sVert->startTime = cg.time;
+	sVert->endTime = cg.time + 900000;
+	sVert->lifeRate = 1.0f / (sVert->endTime - sVert->startTime);
+ 
+	sVert->refEntity.shaderTime = cg.time / 1000.0f;
+	sVert->refEntity.reType = RT_SPRITE;
+	sVert->refEntity.radius = 2;
+	sVert->refEntity.customShader = cgs.media.q3p_stateVertexShader;
+	VectorCopy(cent->currentState.origin, sVert->refEntity.origin);
+	sVert->refEntity.origin[2] += 10.0f;
+
+	sVert->refEntity.shaderRGBA[0] = 255;
+	sVert->refEntity.shaderRGBA[1] = 255;
+	sVert->refEntity.shaderRGBA[2] = 255;
+	sVert->refEntity.shaderRGBA[3] = 255;
+
+	sVert->color[0] = 1.0f;
+	sVert->color[1] = 1.0f;
+	sVert->color[2] = 1.0f;
+	sVert->color[3] = 1.0f;
+
+	// setup the state edge line
+	sEdge = CG_AllocLocalEntity();
+	sEdge->leType = LE_FADE_RGB;
+	sEdge->startTime = cg.time;
+	sEdge->endTime = cg.time + 900000;
+	sEdge->lifeRate = 1.0f / (sEdge->endTime - sEdge->startTime);
+
+	sEdge->refEntity.shaderTime = cg.time / 1000.0f;
+	sEdge->refEntity.reType = RT_RAIL_CORE;
+	sEdge->refEntity.radius = 2;
+	sEdge->refEntity.customShader = cgs.media.q3p_stateEdgeShader;
+
+	VectorCopy(cent->currentState.origin,  sEdge->refEntity.origin);
+	VectorCopy(cent->currentState.origin2, sEdge->refEntity.oldorigin);
+	sEdge->refEntity.origin[2]    += 10.0f;
+	sEdge->refEntity.oldorigin[2] += 10.0f;
+
+	sEdge->refEntity.shaderRGBA[0] = 255;
+	sEdge->refEntity.shaderRGBA[1] = 255;
+	sEdge->refEntity.shaderRGBA[2] = 255;
+	sEdge->refEntity.shaderRGBA[3] = 255;
+
+	sEdge->color[0] = 0.3f;
+	sEdge->color[1] = 0.3f;
+	sEdge->color[2] = 1.0f;
+	sEdge->color[3] = 1.0f;
 }
 
 
