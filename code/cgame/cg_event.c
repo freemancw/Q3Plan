@@ -509,60 +509,60 @@ void CG_PainEvent( centity_t *cent, int health ) {
 CG_VizRRTEvent
 ==============
 */
+
+
+quadpoly_t q3p_RRTQuads[8192];
+int q3p_numRRTQuads = 0;
+
+static const float vertRadius = 4.0f;
+
 static void CG_VizRRTEvent(centity_t *cent) 
 {
-	localEntity_t	*sVert, *sEdge;
+	polyVert_t *sVerts = q3p_RRTQuads[q3p_numRRTQuads++].verts;
 
-	// setup the state vertex dot
-	sVert = CG_AllocLocalEntity();
-	sVert->leType = LE_FADE_RGB;
-	sVert->startTime = cg.time;
-	sVert->endTime = cg.time + 900000;
-	sVert->lifeRate = 1.0f / (sVert->endTime - sVert->startTime);
- 
-	sVert->refEntity.shaderTime = cg.time / 1000.0f;
-	sVert->refEntity.reType = RT_SPRITE;
-	sVert->refEntity.radius = 2;
-	sVert->refEntity.customShader = cgs.media.q3p_stateVertexShader;
-	VectorCopy(cent->currentState.origin, sVert->refEntity.origin);
-	sVert->refEntity.origin[2] += 10.0f;
+	VectorCopy(cent->currentState.origin, sVerts[0].xyz);
+	sVerts[0].xyz[0] -= vertRadius; 
+	sVerts[0].xyz[1] -= vertRadius;
+	sVerts[0].xyz[2] += 10.f;
+	sVerts[0].st[0] = 0.0f; 
+	sVerts[0].st[1] = 0.0f;
+	sVerts[0].modulate[0] = 255;
+	sVerts[0].modulate[1] = 255;
+	sVerts[0].modulate[2] = 255;
+	sVerts[0].modulate[3] = 255;
 
-	sVert->refEntity.shaderRGBA[0] = 255;
-	sVert->refEntity.shaderRGBA[1] = 255;
-	sVert->refEntity.shaderRGBA[2] = 255;
-	sVert->refEntity.shaderRGBA[3] = 255;
+	VectorCopy(cent->currentState.origin, sVerts[1].xyz);
+	sVerts[1].xyz[0] -= vertRadius; 
+	sVerts[1].xyz[1] += vertRadius;
+	sVerts[1].xyz[2] += 10.f;
+	sVerts[1].st[0] = 0.0f; 
+	sVerts[1].st[1] = 1.0f;
+	sVerts[1].modulate[0] = 255;
+	sVerts[1].modulate[1] = 255;
+	sVerts[1].modulate[2] = 255;
+	sVerts[1].modulate[3] = 255;
 
-	sVert->color[0] = 1.0f;
-	sVert->color[1] = 1.0f;
-	sVert->color[2] = 1.0f;
-	sVert->color[3] = 1.0f;
+	VectorCopy(cent->currentState.origin, sVerts[2].xyz);
+	sVerts[2].xyz[0] += vertRadius; 
+	sVerts[2].xyz[1] += vertRadius;
+	sVerts[2].xyz[2] += 10.f;
+	sVerts[2].st[0] = 1.0f; 
+	sVerts[2].st[1] = 1.0f;
+	sVerts[2].modulate[0] = 255;
+	sVerts[2].modulate[1] = 255;
+	sVerts[2].modulate[2] = 255;
+	sVerts[2].modulate[3] = 255;
 
-	// setup the state edge line
-	sEdge = CG_AllocLocalEntity();
-	sEdge->leType = LE_FADE_RGB;
-	sEdge->startTime = cg.time;
-	sEdge->endTime = cg.time + 900000;
-	sEdge->lifeRate = 1.0f / (sEdge->endTime - sEdge->startTime);
-
-	sEdge->refEntity.shaderTime = cg.time / 1000.0f;
-	sEdge->refEntity.reType = RT_RAIL_CORE;
-	sEdge->refEntity.radius = 2;
-	sEdge->refEntity.customShader = cgs.media.q3p_stateEdgeShader;
-
-	VectorCopy(cent->currentState.origin,  sEdge->refEntity.origin);
-	VectorCopy(cent->currentState.origin2, sEdge->refEntity.oldorigin);
-	sEdge->refEntity.origin[2]    += 10.0f;
-	sEdge->refEntity.oldorigin[2] += 10.0f;
-
-	sEdge->refEntity.shaderRGBA[0] = 255;
-	sEdge->refEntity.shaderRGBA[1] = 255;
-	sEdge->refEntity.shaderRGBA[2] = 255;
-	sEdge->refEntity.shaderRGBA[3] = 255;
-
-	sEdge->color[0] = 0.3f;
-	sEdge->color[1] = 0.3f;
-	sEdge->color[2] = 1.0f;
-	sEdge->color[3] = 1.0f;
+	VectorCopy(cent->currentState.origin, sVerts[3].xyz);
+	sVerts[3].xyz[0] += vertRadius; 
+	sVerts[3].xyz[1] -= vertRadius;
+	sVerts[3].xyz[2] += 10.f;
+	sVerts[3].st[0] = 1.0f; 
+	sVerts[3].st[1] = 0.0f;
+	sVerts[3].modulate[0] = 255;
+	sVerts[3].modulate[1] = 255;
+	sVerts[3].modulate[2] = 255;
+	sVerts[3].modulate[3] = 255;
 }
 
 
