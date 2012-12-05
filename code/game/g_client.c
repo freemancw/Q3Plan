@@ -920,10 +920,10 @@ char *ClientConnect( int clientNum, qboolean firstTime, qboolean isBot ) {
 
 	trap_GetUserinfo( clientNum, userinfo, sizeof( userinfo ) );
 
- 	// IP filtering
- 	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=500
- 	// recommanding PB based IP / GUID banning, the builtin system is pretty limited
- 	// check to see if they are on the banned IP list
+	// IP filtering
+	// https://zerowing.idsoftware.com/bugzilla/show_bug.cgi?id=500
+	// recommanding PB based IP / GUID banning, the builtin system is pretty limited
+	// check to see if they are on the banned IP list
 	value = Info_ValueForKey (userinfo, "ip");
 	if ( G_FilterPacket( value ) ) {
 		return "You are banned from this server.";
@@ -1100,7 +1100,7 @@ void ClientSpawn(gentity_t *ent) {
 		{
 			client->pers.initialSpawn = qtrue;
 			spawnPoint = SelectInitialSpawnPoint(spawn_origin, spawn_angles,
-							     !!(ent->r.svFlags & SVF_BOT));
+								 !!(ent->r.svFlags & SVF_BOT));
 		}
 		else
 		{

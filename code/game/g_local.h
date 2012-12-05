@@ -706,7 +706,9 @@ void G_Q3P_RRTSelectVertex(void);
 void G_Q3P_RRTAddVertex(void);
 void G_Q3P_RRTStartAlgorithm(qboolean debug); 
 void G_Q3P_RRTRunDebugFrames(const size_t n);
+void G_Q3P_RRTAdvanceSolution(void);
 qboolean G_Q3P_RRTIsRunning(void);
+qboolean G_Q3P_RRTIsPlayingSolution(void);
 
 extern size_t rrtDebugFrames;
 

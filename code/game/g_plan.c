@@ -335,7 +335,8 @@ static svert_t* selectNNFromSGraph(sgraph_t * const sg, const vec3_t bias)
  *	Uses Dijkstra's algorithm to find the shortest path from the first vertex 
  *	to the goal vertex. Returns a sequence of edge indices which can be used 
  *	to navigate from the start state to the end state. The end of the index
- *	sequence is flagged with UINT_MAX.
+ *	sequence is flagged with UINT_MAX. This assumes that the last vertex in
+ *	the array is the goal vertex.
  */
 static size_t* shortestPathInSGraph(const sgraph_t * const sg)
 {
@@ -420,6 +421,9 @@ struct
 {
 	sgraph_t	sGraph;
 	qboolean	isRunning;
+	qboolean	isPlayingSolution;
+	size_t		*solutionPath;
+	size_t		curSolutionVert;
 } 
 static rrt;
 
@@ -436,12 +440,19 @@ void G_Q3P_RRTSelectVertex(void)
 	vec3_t randomState;
 	svert_t *closestVertex;
 
-	// generate a "random state"
-	randomState[0] = (float)rIntBetween(-512,  512);
-	randomState[1] = (float)rIntBetween(-256, 1088);
-	randomState[2] = (float)rIntBetween( -64,  512);
+	if(rrt.isPlayingSolution)
+	{
+		closestVertex = rrt.sGraph.states.data + rrt.solutionPath[rrt.curSolutionVert];
+	}
+	else 
+	{
+		// generate a "random state"
+		randomState[0] = (float)rIntBetween(-512,  512);
+		randomState[1] = (float)rIntBetween(-256, 1088);
+		randomState[2] = (float)rIntBetween( -64,  512);
 
-	closestVertex = selectNNFromSGraph(&(rrt.sGraph), randomState);
+		closestVertex = selectNNFromSGraph(&(rrt.sGraph), randomState);
+	}
 
 	// restore planner bot state
 	Com_Memcpy(pBot->client, &(closestVertex->client), sizeof(gclient_t));
@@ -478,7 +489,6 @@ void G_Q3P_RRTAddVertex(void)
 
 	if(!rrt.isRunning) return;
 
-	/*
 	if(pBot->client->ps.origin[0] > 336.0f  &&
 	   pBot->client->ps.origin[0] < 432.0f  &&
 	   pBot->client->ps.origin[1] > 912.0f  &&
@@ -487,9 +497,10 @@ void G_Q3P_RRTAddVertex(void)
 	   pBot->client->ps.origin[2] < 344.0f)
 	{
 		rrt.isRunning = qfalse;
-
+		rrt.isPlayingSolution = qtrue;
+		rrt.solutionPath = shortestPathInSGraph(&(rrt.sGraph));
+		rrt.curSolutionVert = 0;
 	}
-	*/
 }
 
 /*!
@@ -511,6 +522,14 @@ qboolean G_Q3P_RRTIsRunning(void)
 }
 
 /*!
+ *	G_Q3P_RRTIsPlayingSolution
+ */
+qboolean G_Q3P_RRTIsPlayingSolution(void)
+{
+	return rrt.isPlayingSolution;
+}
+
+/*!
  *	G_Q3P_RRTStartAlgorithm
  */
 void G_Q3P_RRTStartAlgorithm(qboolean debug)
@@ -529,6 +548,15 @@ void G_Q3P_RRTStartAlgorithm(qboolean debug)
 		rrt.isRunning = qtrue;
 	else
 		rrt.isRunning = qfalse;
+}
+
+/*!
+ *	G_Q3P_RRTAdvanceSolution
+ */
+void G_Q3P_RRTAdvanceSolution(void) 
+{
+	if(rrt.solutionPath[++(rrt.curSolutionVert)] == UINT_MAX)
+		rrt.curSolutionVert = 0;
 }
 
 //============================================================================
