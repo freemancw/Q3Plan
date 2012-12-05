@@ -702,6 +702,7 @@ void BotTestAAS(vec3_t origin);
 
 void G_Q3P_SpawnPlannerBot(void);
 void G_Q3P_SelectRandomControls(usercmd_t *out);
+void G_Q3P_RRTRestoreEdgeControls(usercmd_t *out);
 void G_Q3P_RRTSelectVertex(void);
 void G_Q3P_RRTAddVertex(void);
 void G_Q3P_RRTStartAlgorithm(qboolean debug); 

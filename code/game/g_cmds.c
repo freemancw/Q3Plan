@@ -1631,7 +1631,7 @@ Cmd_Q3P_RRTStartAlgorithm_f
 */
 void Cmd_Q3P_RRTStartAlgorithm_f(gentity_t *ent)
 {
-	G_Q3P_RRTStartAlgorithm(qtrue); 
+	G_Q3P_RRTStartAlgorithm(qfalse); 
 }
 
 /*

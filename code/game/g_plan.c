@@ -437,8 +437,8 @@ struct
 	sgraph_t	sGraph;
 	qboolean	isRunning;
 	qboolean	isPlayingSolution;
-	size_t		*solutionPath;
-	size_t		curSolutionVert;
+	size_t		*solutionEdges;
+	size_t		curSolutionEdgeIdx;
 } 
 static rrt;
 
@@ -456,24 +456,17 @@ void G_Q3P_RRTSelectVertex(void)
 	int stateContents;
 	svert_t *closestVertex;
 
-	if(rrt.isPlayingSolution)
+	do
 	{
-		closestVertex = rrt.sGraph.states.data + rrt.solutionPath[rrt.curSolutionVert];
+		// generate a "random state"
+		randomState[0] = (float)rIntBetween(-512,  512);
+		randomState[1] = (float)rIntBetween(-256, 1088);
+		randomState[2] = (float)rIntBetween( -64,  512);
+		stateContents = trap_PointContents(randomState, -1);
 	}
-	else 
-	{
-		do
-		{
-			// generate a "random state"
-			randomState[0] = (float)rIntBetween(-512,  512);
-			randomState[1] = (float)rIntBetween(-256, 1088);
-			randomState[2] = (float)rIntBetween( -64,  512);
-			stateContents = trap_PointContents(randomState, -1);
-		}
-		while((stateContents & (CONTENTS_SOLID|CONTENTS_LAVA|CONTENTS_SLIME)));
+	while((stateContents & (CONTENTS_SOLID|CONTENTS_LAVA|CONTENTS_SLIME)));
 
-		closestVertex = selectNNFromSGraph(&(rrt.sGraph), randomState);
-	}
+	closestVertex = selectNNFromSGraph(&(rrt.sGraph), randomState);
 
 	// restore planner bot state
 	Com_Memcpy(pBot->client, &(closestVertex->client), sizeof(gclient_t));
@@ -521,8 +514,21 @@ void G_Q3P_RRTAddVertex(void)
 	{
 		rrt.isRunning = qfalse;
 		rrt.isPlayingSolution = qtrue;
-		rrt.solutionPath = shortestPathInSGraph(&(rrt.sGraph));
-		rrt.curSolutionVert = 0;
+		rrt.solutionEdges = shortestPathInSGraph(&(rrt.sGraph));
+		rrt.curSolutionEdgeIdx = 0;
+
+		// restore planner bot state to init vertex
+		Com_Memcpy(pBot->client, &(rrt.sGraph.states.data[0].client), 
+			sizeof(gclient_t));
+		Com_Memcpy(pBot, &(rrt.sGraph.states.data[0].ent), 
+			sizeof(gentity_t));
+
+		// restore times
+		pBot->client->ps.commandTime = level.time;
+		pBot->client->pers.cmd.serverTime = level.time;
+
+		// for presentation purposes
+		VectorCopy(pBot->client->ps.origin, pBot->s.origin); 
 	}
 }
 
@@ -571,6 +577,14 @@ void G_Q3P_RRTStartAlgorithm(qboolean debug)
 		rrt.isRunning = qtrue;
 	else
 		rrt.isRunning = qfalse;
+}
+
+/*!
+ *	G_Q3P_RRTRestoreEdgeControls
+ */
+void G_Q3P_RRTRestoreEdgeControls(usercmd_t *out)
+{
+
 }
 
 /*!

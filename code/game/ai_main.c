@@ -1437,6 +1437,11 @@ int BotAIStartFrame(int time) {
 				G_Q3P_SelectRandomControls(&(botstates[i]->lastucmd));
 			}
 
+			if(G_Q3P_RRTIsPlayingSolution())
+			{
+				G_Q3P_RRTRestoreEdgeControls(&(botstates[i]->lastucmd));
+			}
+
 			botstates[i]->lastucmd.serverTime = time;
 
 			// this triggers a call to clientthink
