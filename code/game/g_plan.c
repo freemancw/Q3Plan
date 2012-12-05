@@ -146,7 +146,7 @@ static sedge_t* addToSEdgeArray(sedgearray_t * const sea,
 static void freeSEdgeArray(sedgearray_t * const sea);
 static void initSGraph(sgraph_t * const sg, const svert_t * const initSv);
 static void addToSGraph(sgraph_t * const sg, svert_t * const sv);
-static svert_t* selectNNFromSGraph(sgraph_t * const sg, const vec3_t bias);
+static svert_t* selectNNFromSGraph(sgraph_t * const sg, vec3_t bias);
 static size_t* shortestPathInSGraph(const sgraph_t * const sg);
 
 //============================================================================
@@ -306,23 +306,38 @@ static void addToSGraph(sgraph_t * const sg, svert_t * const sv)
  *	Currently takes as input a random point bias and returns the Euclidean
  *	nearest neighbor using linear search.
  */
-static svert_t* selectNNFromSGraph(sgraph_t * const sg, const vec3_t bias)
+static svert_t* selectNNFromSGraph(sgraph_t * const sg, vec3_t bias)
 {
+	int biasAreaNum, sAreaNum, sTTime, minTTime;
 	size_t i, nnIdx;
 	float minSqDist, sqDistToRandom;
 	vec3_t vecToRandom;
 
+	biasAreaNum = trap_AAS_PointAreaNum(bias);
 	// find state in graph closest to bias using Euclidean distance
 	minSqDist = FLT_MAX;
+	minTTime = INT_MAX;
 	for(i = 0; i < sg->states.used; i++)
 	{
+		sAreaNum = trap_AAS_PointAreaNum(sg->states.data[i].client.ps.origin);
+		sTTime = trap_AAS_AreaTravelTimeToGoalArea(sAreaNum, 
+			sg->states.data[i].client.ps.origin, biasAreaNum, 0);
 		VectorSubtract(sg->states.data[i].client.ps.origin, bias, vecToRandom);
 		sqDistToRandom = DotProduct(vecToRandom, vecToRandom);
 
-		if(sqDistToRandom < minSqDist)
+		if(sTTime < minTTime)
 		{
-			minSqDist = sqDistToRandom;	
+			minTTime = sTTime;
+			minSqDist = sqDistToRandom;
 			nnIdx = i;
+		}
+		else if (sTTime == minTTime)
+		{
+			if(sqDistToRandom < minSqDist)
+			{
+				minSqDist = sqDistToRandom;
+				nnIdx = i;
+			}
 		}
 	}
 
@@ -434,12 +449,18 @@ size_t	rrtDebugFrames;
 void G_Q3P_RRTSelectVertex(void)
 {
 	vec3_t randomState;
+	int stateContents;
 	svert_t *closestVertex;
 
-	// generate a "random state"
-	randomState[0] = (float)rIntBetween(-512,  512);
-	randomState[1] = (float)rIntBetween(-256, 1088);
-	randomState[2] = (float)rIntBetween( -64,  512);
+	do
+	{
+		// generate a "random state"
+		randomState[0] = (float)rIntBetween(-512,  512);
+		randomState[1] = (float)rIntBetween(-256, 1088);
+		randomState[2] = (float)rIntBetween( -64,  512);
+		stateContents = trap_PointContents(randomState, -1);
+	}
+	while((stateContents & (CONTENTS_SOLID|CONTENTS_LAVA|CONTENTS_SLIME)));
 
 	closestVertex = selectNNFromSGraph(&(rrt.sGraph), randomState);
 

@@ -1482,7 +1482,7 @@ typedef struct
 }
 quadpoly_t;
 
-extern quadpoly_t q3p_RRTQuads[8192];
+extern quadpoly_t q3p_RRTQuads[500000];
 extern int q3p_numRRTQuads;
 
 //===============================================
