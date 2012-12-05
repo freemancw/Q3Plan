@@ -509,36 +509,61 @@ void CG_PainEvent( centity_t *cent, int health ) {
 CG_VizRRTEvent
 ==============
 */
+
+
+quadpoly_t q3p_RRTQuads[500000];
+int q3p_numRRTQuads = 0;
+
+static const float vertRadius = 2.0f;
+static const byte vertColor[4] = {0, 100, 255, 255};
+
 static void CG_VizRRTEvent(centity_t *cent) 
 {
-	localEntity_t *le;
-	refEntity_t   *re;
- 
-	le = CG_AllocLocalEntity();
-	re = &le->refEntity;
- 
-	le->leType = LE_FADE_RGB;
-	le->startTime = cg.time;
-	le->endTime = cg.time + 100000;
-	le->lifeRate = 1.0f / (le->endTime - le->startTime);
- 
-	re->shaderTime = cg.time / 1000.0f;
-	re->reType = RT_SPRITE;
-	re->radius = 4;
-	re->customShader = cgs.media.plasmaBallShader;
- 
-	VectorCopy(cent->currentState.origin, re->origin);
-	re->origin[2] += 8.0f;
- 
-	re->shaderRGBA[0] = 255;
-	re->shaderRGBA[1] = 255;
-	re->shaderRGBA[2] = 255;
-	re->shaderRGBA[3] = 255;
+	polyVert_t *sVerts = q3p_RRTQuads[q3p_numRRTQuads++].verts;
 
-	le->color[0] = 0.7f;
-	le->color[1] = 0.7f;
-	le->color[2] = 0.7f;
-	le->color[3] = 1.0f;
+	VectorCopy(cent->currentState.origin, sVerts[0].xyz);
+	sVerts[0].xyz[0] -= vertRadius; 
+	sVerts[0].xyz[1] -= vertRadius;
+	sVerts[0].xyz[2] += 10.f;
+	sVerts[0].st[0] = 0.0f; 
+	sVerts[0].st[1] = 0.0f;
+	sVerts[0].modulate[0] = vertColor[0];
+	sVerts[0].modulate[1] = vertColor[1];
+	sVerts[0].modulate[2] = vertColor[2];
+	sVerts[0].modulate[3] = vertColor[3];
+
+	VectorCopy(cent->currentState.origin, sVerts[1].xyz);
+	sVerts[1].xyz[0] -= vertRadius; 
+	sVerts[1].xyz[1] += vertRadius;
+	sVerts[1].xyz[2] += 10.f;
+	sVerts[1].st[0] = 0.0f; 
+	sVerts[1].st[1] = 1.0f;
+	sVerts[1].modulate[0] = vertColor[0];
+	sVerts[1].modulate[1] = vertColor[1];
+	sVerts[1].modulate[2] = vertColor[2];
+	sVerts[1].modulate[3] = vertColor[3];
+
+	VectorCopy(cent->currentState.origin, sVerts[2].xyz);
+	sVerts[2].xyz[0] += vertRadius; 
+	sVerts[2].xyz[1] += vertRadius;
+	sVerts[2].xyz[2] += 10.f;
+	sVerts[2].st[0] = 1.0f; 
+	sVerts[2].st[1] = 1.0f;
+	sVerts[2].modulate[0] = vertColor[0];
+	sVerts[2].modulate[1] = vertColor[1];
+	sVerts[2].modulate[2] = vertColor[2];
+	sVerts[2].modulate[3] = vertColor[3];
+
+	VectorCopy(cent->currentState.origin, sVerts[3].xyz);
+	sVerts[3].xyz[0] += vertRadius; 
+	sVerts[3].xyz[1] -= vertRadius;
+	sVerts[3].xyz[2] += 10.f;
+	sVerts[3].st[0] = 1.0f; 
+	sVerts[3].st[1] = 0.0f;
+	sVerts[3].modulate[0] = vertColor[0];
+	sVerts[3].modulate[1] = vertColor[1];
+	sVerts[3].modulate[2] = vertColor[2];
+	sVerts[3].modulate[3] = vertColor[3];
 }
 
 

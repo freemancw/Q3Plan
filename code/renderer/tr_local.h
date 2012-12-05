@@ -260,7 +260,7 @@ typedef struct {
 
 	// used for TMOD_SCALE
 	float			scale[2];			// s *= scale[0]
-	                                    // t *= scale[1]
+										// t *= scale[1]
 
 	// used for TMOD_SCROLL
 	float			scroll[2];			// s' = s + scroll[0] * time
@@ -1311,7 +1311,7 @@ void		GLimp_Minimize(void);
 // NOTE TTimo linux works with float gamma value, not the gamma table
 //   the params won't be used, getting the r_gamma cvar directly
 void		GLimp_SetGamma( unsigned char red[256], 
-						    unsigned char green[256],
+							unsigned char green[256],
 							unsigned char blue[256] );
 
 
@@ -1529,8 +1529,8 @@ qboolean R_LoadIQM (model_t *mod, void *buffer, int filesize, const char *name )
 void R_AddIQMSurfaces( trRefEntity_t *ent );
 void RB_IQMSurfaceAnim( surfaceType_t *surface );
 int R_IQMLerpTag( orientation_t *tag, iqmData_t *data,
-                  int startFrame, int endFrame,
-                  float frac, const char *tagName );
+				  int startFrame, int endFrame,
+				  float frac, const char *tagName );
 
 /*
 =============================================================
@@ -1694,8 +1694,10 @@ typedef enum {
 // these are sort of arbitrary limits.
 // the limits apply to the sum of all scenes in a frame --
 // the main view, all the 3D icons, etc
-#define	MAX_POLYS		600
-#define	MAX_POLYVERTS	3000
+//#define	MAX_POLYS		600
+//#define	MAX_POLYVERTS	3000
+#define	MAX_POLYS		500000
+#define	MAX_POLYVERTS	500000
 
 // all of the information needed by the back end must be
 // contained in a backEndData_t.  This entire structure is
@@ -1736,9 +1738,9 @@ void RE_StretchPic ( float x, float y, float w, float h,
 void RE_BeginFrame( stereoFrame_t stereoFrame );
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec );
 void RE_SaveJPG(char * filename, int quality, int image_width, int image_height,
-                unsigned char *image_buffer, int padding);
+				unsigned char *image_buffer, int padding);
 size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
-		          int image_width, int image_height, byte *image_buffer, int padding);
+				  int image_width, int image_height, byte *image_buffer, int padding);
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
 

@@ -868,6 +868,10 @@ static void CG_RegisterGraphics( void ) {
 	cgs.media.backTileShader = trap_R_RegisterShader( "gfx/2d/backtile" );
 	cgs.media.noammoShader = trap_R_RegisterShader( "icons/noammo" );
 
+	// freemancw - motion planning
+	cgs.media.q3p_stateVertexShader = trap_R_RegisterShader("q3planFX/stateVertex");
+	cgs.media.q3p_stateEdgeShader = trap_R_RegisterShader("q3planFX/stateEdge");
+
 	// powerup shaders
 	cgs.media.quadShader = trap_R_RegisterShader("powerups/quad" );
 	cgs.media.quadWeaponShader = trap_R_RegisterShader("powerups/quadWeapon" );
@@ -1216,7 +1220,7 @@ qboolean CG_Asset_Parse(int handle) {
 	if (Q_stricmp(token.string, "{") != 0) {
 		return qfalse;
 	}
-    
+	
 	while ( 1 ) {
 		if (!trap_PC_ReadToken(handle, &token))
 			return qfalse;
@@ -1412,7 +1416,7 @@ qboolean CG_Load_Menu(char **p) {
 	while ( 1 ) {
 
 		token = COM_ParseExt(p, qtrue);
-    
+	
 		if (Q_stricmp(token, "}") == 0) {
 			return qtrue;
 		}
@@ -1965,8 +1969,8 @@ void CG_Shutdown( void ) {
 CG_EventHandling
 ==================
  type 0 - no event handling
-      1 - team menu
-      2 - hud editor
+	  1 - team menu
+	  2 - hud editor
 
 */
 #ifndef MISSIONPACK

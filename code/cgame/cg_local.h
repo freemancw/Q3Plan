@@ -760,6 +760,10 @@ typedef struct {
 	qhandle_t	holeMarkShader;
 	qhandle_t	energyMarkShader;
 
+	// freemancw - motion planning
+	qhandle_t	q3p_stateVertexShader;
+	qhandle_t	q3p_stateEdgeShader;
+
 	// powerup shaders
 	qhandle_t	quadShader;
 	qhandle_t	redQuadShader;
@@ -1472,6 +1476,14 @@ void CG_Respawn( void );
 void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops );
 void CG_CheckChangedPredictableEvents( playerState_t *ps );
 
+typedef struct
+{
+	polyVert_t verts[4];
+}
+quadpoly_t;
+
+extern quadpoly_t q3p_RRTQuads[500000];
+extern int q3p_numRRTQuads;
 
 //===============================================
 
