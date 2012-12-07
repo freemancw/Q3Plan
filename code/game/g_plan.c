@@ -147,7 +147,7 @@ static void freeSEdgeArray(sedgearray_t * const sea);
 static void initSGraph(sgraph_t * const sg, const svert_t * const initSv);
 static void addToSGraph(sgraph_t * const sg, svert_t * const sv);
 static svert_t* selectNNFromSGraph(sgraph_t * const sg, vec3_t bias);
-static size_t* shortestPathInSGraph(const sgraph_t * const sg);
+static sedge_t** shortestPathToGoal(const sgraph_t * const sg);
 
 //============================================================================
 // svertex_t and svertexarray_t support routines
@@ -173,7 +173,7 @@ static void constructSVert(svert_t * const sv, const gentity_t * const ent,
 	if(neighbors) 
 		sv->neighbors = *neighbors;
 	else
-		initSEdgeArray(&(sv->neighbors), 16);
+		initSEdgeArray(&(sv->neighbors), 16); //! @todo magic number
 }
 
 /*!
@@ -346,17 +346,22 @@ static svert_t* selectNNFromSGraph(sgraph_t * const sg, vec3_t bias)
 }
 
 /*!
- *	shortestPathInSGraph
+ *	shortestPathToGoal
  *	Uses Dijkstra's algorithm to find the shortest path from the first vertex 
- *	to the goal vertex. Returns a sequence of edge indices which can be used 
+ *	to the goal vertex. Returns a sequence of edge pointers which can be used 
  *	to navigate from the start state to the end state. The end of the index
- *	sequence is flagged with UINT_MAX. This assumes that the last vertex in
+ *	sequence is flagged with NULL. This assumes that the last vertex in
  *	the array is the goal vertex.
  */
-static size_t* shortestPathInSGraph(const sgraph_t * const sg)
+static sedge_t** shortestPathToGoal(const sgraph_t * const sg)
 {
-	size_t i, minDist, numEdges, *eIndices, *eIdxPtr;
+	size_t i, minDist, numEdges;
 	svert_t *curNode;
+	sedge_t **eOutPtr, **ePathOut;
+
+	//========================================================================
+	// shortest path computation
+	//========================================================================
 
 	// distance from source to source
 	sg->states.data[0].dist = 0;
@@ -399,6 +404,11 @@ static size_t* shortestPathInSGraph(const sgraph_t * const sg)
 		}
 	}
 
+	//========================================================================
+	// prepare and return path info
+	//========================================================================
+
+	// start at the goal, count the number of edges between it and the start
 	curNode = sg->states.data + sg->states.used - 1;
 	while(curNode != sg->states.data)
 	{
@@ -406,10 +416,10 @@ static size_t* shortestPathInSGraph(const sgraph_t * const sg)
 		numEdges++;
 	}
 
-	eIndices = (size_t*)malloc(sizeof(size_t) * (numEdges + 1));
-	eIdxPtr = eIndices + numEdges;
-	*eIdxPtr = UINT_MAX;
-	eIdxPtr--;
+	ePathOut = (sedge_t **)malloc((numEdges + 1) * sizeof(sedge_t *));
+	eOutPtr = ePathOut + numEdges;
+	*eOutPtr-- = NULL;
+
 	curNode = sg->states.data + sg->states.used - 1;
 	while(curNode != sg->states.data)
 	{
@@ -417,15 +427,14 @@ static size_t* shortestPathInSGraph(const sgraph_t * const sg)
 		{
 			if(curNode->path->neighbors.data[i].dst == curNode)
 			{
-				*eIdxPtr = i;
+				*eOutPtr-- = &(curNode->path->neighbors.data[i]);
 				break;
 			}
 		}
 		curNode = curNode->path;
-		eIdxPtr--;
 	}
 
-	return eIndices;
+	return ePathOut;
 }
 
 //============================================================================
