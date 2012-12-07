@@ -352,6 +352,8 @@ static svert_t* selectNNFromSGraph(sgraph_t * const sg, vec3_t bias)
  *	to navigate from the start state to the end state. The end of the index
  *	sequence is flagged with NULL. This assumes that the last vertex in
  *	the array is the goal vertex.
+ *
+ *	@note Client responsible for freeing memory
  */
 static sedge_t** shortestPathToGoal(const sgraph_t * const sg)
 {
@@ -410,6 +412,7 @@ static sedge_t** shortestPathToGoal(const sgraph_t * const sg)
 
 	// start at the goal, count the number of edges between it and the start
 	curNode = sg->states.data + sg->states.used - 1;
+	numEdges = 0;
 	while(curNode != sg->states.data)
 	{
 		curNode = curNode->path;
@@ -446,8 +449,8 @@ struct
 	sgraph_t	sGraph;
 	qboolean	isRunning;
 	qboolean	isPlayingSolution;
-	size_t		*solutionEdges;
-	size_t		curSolutionEdgeIdx;
+	sedge_t		**solutionEdges;
+	sedge_t		**solutionEdgePtr;
 } 
 static rrt;
 
@@ -523,8 +526,8 @@ void G_Q3P_RRTAddVertex(void)
 	{
 		rrt.isRunning = qfalse;
 		rrt.isPlayingSolution = qtrue;
-		rrt.solutionEdges = shortestPathInSGraph(&(rrt.sGraph));
-		rrt.curSolutionEdgeIdx = 0;
+		rrt.solutionEdges = shortestPathToGoal(&(rrt.sGraph));
+		rrt.solutionEdgePtr = rrt.solutionEdges;
 
 		// restore planner bot state to init vertex
 		Com_Memcpy(pBot->client, &(rrt.sGraph.states.data[0].client), 
@@ -593,7 +596,8 @@ void G_Q3P_RRTStartAlgorithm(qboolean debug)
  */
 void G_Q3P_RRTRestoreEdgeControls(usercmd_t *out)
 {
-
+	memcpy(out, &(*rrt.solutionEdgePtr++)->controls, sizeof(usercmd_t));
+	if(!rrt.solutionEdgePtr) rrt.isPlayingSolution = qfalse;
 }
 
 /*!
@@ -601,8 +605,7 @@ void G_Q3P_RRTRestoreEdgeControls(usercmd_t *out)
  */
 void G_Q3P_RRTAdvanceSolution(void) 
 {
-	if(rrt.solutionPath[++(rrt.curSolutionVert)] == UINT_MAX)
-		rrt.curSolutionVert = 0;
+	
 }
 
 //============================================================================
