@@ -1042,12 +1042,16 @@ void G_RunClient(gentity_t *ent)
 		// get rid of the phone jack
 		ent->client->lastCmdTime = level.time;
 
+		G_Printf("Time delta: %d\n", level.time - ent->client->ps.commandTime);
+
 		if(G_Q3P_RRT_SolutionIsPlaying())
 		{
+			//ent->client->ps.commandTime = level.time - 1000;
 			ClientThink_real(ent);
 		}
 		else if(G_Q3P_RRT_AlgorithmIsRunning() || G_Q3P_RRT_NumDebugFrames)
 		{
+			ent->client->ps.eFlags ^= EF_TELEPORT_BIT;
 			ClientThink_real(ent);
 			G_Q3P_RRT_AddNewState();
 

@@ -994,6 +994,8 @@ static void CG_ServerCommand( void ) {
 	char		text[MAX_SAY_TEXT];
 	size_t		nodeId;
 	vec3_t		origin;
+	byte mycolor[4] = {255, 0, 0, 255};
+	static size_t lastNodeId = 0;
 
 	cmd = CG_Argv(0);
 
@@ -1009,10 +1011,22 @@ static void CG_ServerCommand( void ) {
 
 	if ( !strcmp( cmd, "addSNode" ) ) {
 		nodeId = atoi(CG_Argv(1));
+		if(nodeId == lastNodeId)
+			return;
+
 		origin[0] = atof(CG_Argv(2));
 		origin[1] = atof(CG_Argv(3));
 		origin[2] = atof(CG_Argv(4));
 		CG_Q3P_RRT_AddSNode(nodeId, origin);
+		lastNodeId = nodeId;
+		return;
+	}
+
+	if ( !strcmp( cmd, "colorSNode" ) ) {
+		nodeId = atoi(CG_Argv(1));
+		if(nodeId == lastNodeId)
+			return;
+		CG_Q3P_RRT_SetSNodeColor(nodeId, mycolor);
 		return;
 	}
 

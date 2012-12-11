@@ -161,11 +161,6 @@ static void CG_TransitionSnapshot( void ) {
 		cent = &cg_entities[ cg.snap->entities[ i ].number ];
 		CG_TransitionEntity( cent );
 
-		if(cent->currentState.eFlags & EF_RRTBOT)
-			CG_Printf("omg");
-
-		CG_Printf("%d: %d\n", cent->currentState.clientNum, cent->currentState.generic1);
-
 		// remember time of snapshot this entity was last updated in
 		cent->snapShotTime = cg.snap->serverTime;
 	}

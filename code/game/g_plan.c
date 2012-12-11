@@ -129,6 +129,12 @@ static gentity_t *rrtBot;
 
 size_t	G_Q3P_RRT_NumDebugFrames;	
 
+static void printNode(snode_t *node)
+{
+	G_Printf("Depth: %d, Parent Node Idx: %d, Parent Node Edge Idx: %d, Number of Neighbors: %d\n", 
+		node->depth, node->path.nodeIdx, node->path.edgeIdx, node->neighbors.used);
+}
+
 /*!
  *	G_Q3P_RRT_SpawnBot
  *	The first thing the user must do is spawn in a special AI bot.
@@ -151,14 +157,19 @@ void G_Q3P_RRT_InitTree()
 	snode_t rootState;
 	spath_t rootPath;
 
-	G_Printf("RRT State Tree Initialized\n");
+	G_Printf("Initializing RRT state tree.\n");
 	
 	// construct the initial state from wherever the bot is currently
 	rootPath.nodeIdx = rootPath.edgeIdx = UINT_MAX;
 	constructSNode(&rootState, rrtBot, rrtBot->client, 0, rootPath, NULL);
 
+	G_Printf("Constructed root node: ");
+	printNode(&rootState);
+
 	// add initial state to tree
 	initSTree(&(rrt.sTree), &rootState);
+
+	G_Printf("Added it to the tree.\n");
 }
 
 /*!
@@ -229,8 +240,11 @@ void G_Q3P_RRT_RestoreStateForExpansion(void)
 	}
 	while((stateContents & (CONTENTS_SOLID|CONTENTS_LAVA|CONTENTS_SLIME)));
 
-	closestNode = rrt.sTree.states.data + 
-				  getNNIdxFromSTree(&(rrt.sTree), randomState);
+	rrt.sTree.expansionNodeIdx = getNNIdxFromSTree(&(rrt.sTree), randomState);
+	closestNode = rrt.sTree.states.data + rrt.sTree.expansionNodeIdx;
+
+	G_Printf("Expanding from node %d: ", rrt.sTree.expansionNodeIdx);
+	printNode(closestNode);
 
 	// restore planner bot state
 	Com_Memcpy(rrtBot->client, &(closestNode->client), sizeof(gclient_t));
@@ -239,15 +253,6 @@ void G_Q3P_RRT_RestoreStateForExpansion(void)
 	// restore times
 	rrtBot->client->ps.commandTime = level.time;
 	rrtBot->client->pers.cmd.serverTime = level.time;
-	rrtBot->client->ps.eFlags ^= EF_TELEPORT_BIT;
-	trap_SendServerCommand(-1, va("addSNode %i %f %f %f", 
-		rrt.sTree.states.used, rrtBot->client->ps.origin[0], 
-		rrtBot->client->ps.origin[1], rrtBot->client->ps.origin[2]));
-	//rrtBot->client->ps.eFlags |= EF_RRTBOT;
-	//rrtBot->client->ps.generic1 = rrt.sTree.states.used;
-
-	// for presentation purposes
-	//VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin); 
 }
 
 /*!
@@ -266,27 +271,31 @@ void G_Q3P_RRT_AddNewState(void)
 
 	constructSNode(&newNode, rrtBot, rrtBot->client, parentNode->depth + 1,
 				   path, NULL);
+
+	G_Printf("Constructed a new node: ");
+	printNode(&newNode);
+
 	addToSTree(&(rrt.sTree), &newNode);
-
-	// draw the new state's position clientside
-	//VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin2);
-
-	if(!rrt.bAlgorithmIsRunning) return;
+	trap_SendServerCommand(-1, va("addSNode %i %f %f %f", 
+		rrt.sTree.states.used - 1, rrtBot->client->ps.origin[0], 
+		rrtBot->client->ps.origin[1], rrtBot->client->ps.origin[2]));
 
 	// check for stopping condition
-	if(rrtBot->client->ps.origin[0] > 336.0f  &&
-	   rrtBot->client->ps.origin[0] < 432.0f  &&
-	   rrtBot->client->ps.origin[1] > 912.0f  &&
-	   rrtBot->client->ps.origin[1] < 1008.0f &&
-	   rrtBot->client->ps.origin[2] > 256.0f  &&
-	   rrtBot->client->ps.origin[2] < 344.0f)
+	if(rrtBot->client->ps.origin[0] > -128.0f  &&
+	   rrtBot->client->ps.origin[0] < 256.0f  &&
+	   rrtBot->client->ps.origin[1] > 528.0f  &&
+	   rrtBot->client->ps.origin[1] < 624.0f &&
+	   rrtBot->client->ps.origin[2] > 0.0f  &&
+	   rrtBot->client->ps.origin[2] < 88.0f)
 	{
 		rrt.solutionPath = getMinPathToGoal(&(rrt.sTree));
 		rrt.solutionPathIdx = 0;
 		rrt.bAlgorithmIsRunning = qfalse;
 		rrt.bSolutionIsPlaying = qtrue;
 
-		// restore planner bot state to init vertex
+		G_Printf("Restoring RRT Bot to init state\n");
+
+		// restore planner bot state to init node
 		Com_Memcpy(rrtBot->client, &(rrt.sTree.states.data[0].client), 
 			sizeof(gclient_t));
 		Com_Memcpy(rrtBot, &(rrt.sTree.states.data[0].ent), 
@@ -295,10 +304,15 @@ void G_Q3P_RRT_AddNewState(void)
 		// restore times
 		rrtBot->client->ps.commandTime = level.time;
 		rrtBot->client->pers.cmd.serverTime = level.time;
-
-		// for presentation purposes
-		VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin); 
+		rrtBot->client->lastCmdTime = level.time - 50;
+		rrtBot->client->ps.eFlags ^= EF_TELEPORT_BIT;
 	}
+}
+
+void printControls(usercmd_t * cmd)
+{
+	G_Printf("Applying controls: %d, %d, %d, %d, %d, %d\n", cmd->forwardmove, 
+		cmd->rightmove, cmd->upmove, cmd->angles[0], cmd->angles[1], cmd->angles[2]);
 }
 
 /*!
@@ -307,23 +321,28 @@ void G_Q3P_RRT_AddNewState(void)
  *	an expansion state is restored. If the solution is playing, controls are
  *	selected from the current edge on the solution path.
  */
+usercmd_t savedControls;
 void G_Q3P_RRT_SelectControls(usercmd_t * const out)
 {
 	spath_t *p;
 	snode_t *node;
+	usercmd_t *cmd;
 
 	if(rrt.bAlgorithmIsRunning)
 	{
-		out->forwardmove	= rIntBetween(-127, 127);
-		out->rightmove		= rIntBetween(-127, 127);
-		out->upmove			= rIntBetween(-127, 127);
-		out->angles[0]		= ANGLE2SHORT(rIntBetween(0, 360));
-		out->angles[1]		= ANGLE2SHORT(rIntBetween(0, 360));
-		out->angles[2]		= ANGLE2SHORT(rIntBetween(0, 360));
+		out->forwardmove	= savedControls.forwardmove		= rIntBetween(-127, 127);
+		out->rightmove		= savedControls.rightmove		= rIntBetween(-127, 127);
+		out->upmove			= savedControls.upmove			= rIntBetween(-127, 127);
+		out->angles[0]		= savedControls.angles[0]		= ANGLE2SHORT(rIntBetween(0, 360));
+		out->angles[1]		= savedControls.angles[1]		= ANGLE2SHORT(rIntBetween(0, 360));
+		out->angles[2]		= savedControls.angles[2]		= ANGLE2SHORT(rIntBetween(0, 360));
 	}
 	else if(rrt.bSolutionIsPlaying)
 	{
 		p = rrt.solutionPath + rrt.solutionPathIdx;
+
+		G_Printf("Getting controls from solution path %d: parent idx %d, parent edge idx %d\n", 
+			rrt.solutionPathIdx, p->nodeIdx, p->edgeIdx);
 
 		if(rrt.solutionPathIdx && p->nodeIdx == UINT_MAX) 
 		{
@@ -331,10 +350,20 @@ void G_Q3P_RRT_SelectControls(usercmd_t * const out)
 			return;
 		}
 
+		trap_SendServerCommand(-1, va("colorSNode %i 255 0 0", p->nodeIdx));
+
 		node = rrt.sTree.states.data + p->nodeIdx;
-		Com_Memcpy(out, node->neighbors.data + p->edgeIdx, sizeof(usercmd_t));
+		cmd = &(node->neighbors.data[p->edgeIdx].controls);
+		out->forwardmove	= cmd->forwardmove;
+		out->rightmove		= cmd->rightmove;
+		out->upmove			= cmd->upmove;
+		out->angles[0]		= cmd->angles[0];
+		out->angles[1]		= cmd->angles[1];
+		out->angles[2]		= cmd->angles[2];
 		rrt.solutionPathIdx++;
 	}
+
+	printControls(out);
 }
 
 qboolean G_Q3P_RRT_AlgorithmIsRunning()
@@ -492,7 +521,9 @@ static void addToSTree(stree_t * const st, snode_t * const sn)
 {
 	sedge_t newEdge;
 
-	constructSEdge(&newEdge, &(sn->client.pers.cmd), 1, sn);
+	savedControls.serverTime = sn->client.pers.cmd.serverTime;
+	constructSEdge(&newEdge, &savedControls, 1, sn);
+	//constructSEdge(&newEdge, &(sn->client.pers.cmd), 1, sn);
 	addToSEdgeArray(&(st->states.data[st->expansionNodeIdx].neighbors), 
 					&newEdge);
 	addToSNodeArray(&(st->states), sn);
@@ -538,7 +569,6 @@ static size_t getNNIdxFromSTree(stree_t * const st, vec3_t bias)
 		}
 	}
 
-	st->expansionNodeIdx = nnIdx;
 	return nnIdx;
 }
 
@@ -554,7 +584,7 @@ static spath_t* getMinPathToGoal(const stree_t * const st)
 
 	endMarker.nodeIdx = endMarker.edgeIdx = UINT_MAX;
 
-	curNode  = st->states.data + st->states.used - 1;
+	curNode  = st->states.data + st->states.used - 1; 
 	rootNode = st->states.data;
 	minPath  = (spath_t*)malloc((curNode->depth + 1) * sizeof(spath_t));
 	i		 = curNode->depth;
@@ -562,6 +592,8 @@ static spath_t* getMinPathToGoal(const stree_t * const st)
 	minPath[i--] = endMarker;
 	while(curNode != rootNode)
 	{
+		G_Printf("%d curNode: ", i);
+		printNode(curNode);
 		minPath[i--] = curNode->path;
 		curNode = st->states.data + curNode->path.nodeIdx;
 	}
