@@ -169,7 +169,6 @@ void G_Q3P_RRT_InitTree()
 void G_Q3P_RRT_RunAlgorithm()
 {
 	rrt.bAlgorithmIsRunning = qtrue;
-	
 }
 
 /*!
@@ -241,6 +240,11 @@ void G_Q3P_RRT_RestoreStateForExpansion(void)
 	rrtBot->client->ps.commandTime = level.time;
 	rrtBot->client->pers.cmd.serverTime = level.time;
 	rrtBot->client->ps.eFlags ^= EF_TELEPORT_BIT;
+	trap_SendServerCommand(-1, va("addSNode %i %f %f %f", 
+		rrt.sTree.states.used, rrtBot->client->ps.origin[0], 
+		rrtBot->client->ps.origin[1], rrtBot->client->ps.origin[2]));
+	//rrtBot->client->ps.eFlags |= EF_RRTBOT;
+	//rrtBot->client->ps.generic1 = rrt.sTree.states.used;
 
 	// for presentation purposes
 	//VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin); 
@@ -266,7 +270,6 @@ void G_Q3P_RRT_AddNewState(void)
 
 	// draw the new state's position clientside
 	//VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin2);
-	rrtBot->client->ps.generic1 = rrt.sTree.states.used - 1;
 
 	if(!rrt.bAlgorithmIsRunning) return;
 

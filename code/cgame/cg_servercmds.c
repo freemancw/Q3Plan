@@ -992,6 +992,8 @@ Cmd_Argc() / Cmd_Argv()
 static void CG_ServerCommand( void ) {
 	const char	*cmd;
 	char		text[MAX_SAY_TEXT];
+	size_t		nodeId;
+	vec3_t		origin;
 
 	cmd = CG_Argv(0);
 
@@ -1002,6 +1004,15 @@ static void CG_ServerCommand( void ) {
 
 	if ( !strcmp( cmd, "cp" ) ) {
 		CG_CenterPrint( CG_Argv(1), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+		return;
+	}
+
+	if ( !strcmp( cmd, "addSNode" ) ) {
+		nodeId = atoi(CG_Argv(1));
+		origin[0] = atof(CG_Argv(2));
+		origin[1] = atof(CG_Argv(3));
+		origin[2] = atof(CG_Argv(4));
+		CG_Q3P_RRT_AddSNode(nodeId, origin);
 		return;
 	}
 
