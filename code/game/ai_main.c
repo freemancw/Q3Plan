@@ -1431,15 +1431,14 @@ int BotAIStartFrame(int time) {
 
 		if(g_entities[i].q3p_isPlannerBot) 
 		{
-			if(G_Q3P_RRTIsRunning() || rrtDebugFrames)
+			if(G_Q3P_RRT_AlgorithmIsRunning() || G_Q3P_RRT_NumDebugFrames)
 			{
-				G_Q3P_RRTSelectVertex();
-				G_Q3P_SelectRandomControls(&(botstates[i]->lastucmd));
+				G_Q3P_RRT_RestoreStateForExpansion();
+				G_Q3P_RRT_SelectControls(&(botstates[i]->lastucmd));
 			}
-
-			if(G_Q3P_RRTIsPlayingSolution())
+			else if(G_Q3P_RRT_SolutionIsPlaying())
 			{
-				G_Q3P_RRTRestoreEdgeControls(&(botstates[i]->lastucmd));
+				G_Q3P_RRT_SelectControls(&(botstates[i]->lastucmd));
 			}
 
 			botstates[i]->lastucmd.serverTime = time;

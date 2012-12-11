@@ -594,7 +594,12 @@ void CG_InitConsoleCommands( void ) {
 	trap_AddCommand ("teamtask");
 	trap_AddCommand ("loaddefered");	// spelled wrong, but not changing for demo
 	
-	// freemancw - Q3Plan
-	trap_AddCommand ("q3p_spawnplannerbot");
-	trap_AddCommand ("q3p_advanceplannerbot");
+	// freemancw - q3plan
+	trap_AddCommand ("q3p_rrt_spawnbot");
+	trap_AddCommand ("q3p_rrt_inittree");
+	trap_AddCommand ("q3p_rrt_runalgorithm");
+	trap_AddCommand ("q3p_rrt_rundebugframes");
+	trap_AddCommand ("q3p_rrt_pausealgorithm");
+	trap_AddCommand ("q3p_rrt_playsolution");
+	trap_AddCommand ("q3p_rrt_pausesolution");
 }

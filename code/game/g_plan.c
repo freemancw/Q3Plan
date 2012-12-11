@@ -71,7 +71,7 @@ struct stree_s
 static void			constructSNode(snode_t * const sn, 
 								   const gentity_t * const ent, 
 								   const gclient_t * const client, 
-								   const size_t depth,
+								   const size_t depth, const spath_t path,
 								   const sedgearray_t * const neighbors);
 
 static void			initSNodeArray(snodearray_t * const sna, 
@@ -118,26 +118,110 @@ static void printVec3(vec3_t out);
 struct
 {
 	stree_t		sTree;
-	qboolean	isRunning;
-	qboolean	isPlayingSolution;
+	spath_t		*solutionPath;
+	size_t		solutionPathIdx;
+	qboolean	bAlgorithmIsRunning;
+	qboolean	bSolutionIsPlaying;
 } 
 static rrt;
-static gentity_t *pBot;
 
-size_t	rrtDebugFrames;	
+static gentity_t *rrtBot;
+
+size_t	G_Q3P_RRT_NumDebugFrames;	
 
 /*!
- *	G_Q3P_RRTSelectVertex
+ *	G_Q3P_RRT_SpawnBot
+ *	The first thing the user must do is spawn in a special AI bot.
+ *	@todo maybe check for one already existing...
  */
-void G_Q3P_RRTSelectVertex(void)
+void G_Q3P_RRT_SpawnBot()
+{
+	rrtBot = G_Q3P_AddPlannerBot();
+}
+
+/*!
+ *	G_Q3P_RRT_InitTree
+ *	The second thing the user must do is initialize the state tree with the
+ *	RRT bot's current state. 
+ *	@note this isn't combined with spawning the bot because it could take
+ *		  several frames for information to be processed (I'm 100% not sure)
+ */
+void G_Q3P_RRT_InitTree()
+{
+	snode_t rootState;
+	spath_t rootPath;
+
+	G_Printf("RRT State Tree Initialized\n");
+	
+	// construct the initial state from wherever the bot is currently
+	rootPath.nodeIdx = rootPath.edgeIdx = UINT_MAX;
+	constructSNode(&rootState, rrtBot, rrtBot->client, 0, rootPath, NULL);
+
+	// add initial state to tree
+	initSTree(&(rrt.sTree), &rootState);
+}
+
+/*!
+ *	G_Q3P_RRT_RunAlgorithm
+ *	After the tree is initialized, the user can let the algorithm run until
+ *	a new vertex lands inside of the goal region.
+ */
+void G_Q3P_RRT_RunAlgorithm()
+{
+	rrt.bAlgorithmIsRunning = qtrue;
+}
+
+/*!
+ *	G_Q3P_RRT_RunDebugFrames
+ *	After the tree is initialized, the user can manually step through a 
+ *	specified number of frames.
+ *	@todo better way of communicating than using global variable?
+ */
+void G_Q3P_RRT_RunDebugFrames(const size_t n)
+{
+	if(rrt.bAlgorithmIsRunning || rrt.bSolutionIsPlaying) return;
+
+	G_Q3P_RRT_NumDebugFrames += n;
+}
+
+void G_Q3P_RRT_PauseAlgorithm()
+{
+	rrt.bAlgorithmIsRunning = qfalse;
+}
+
+void G_Q3P_RRT_PlaySolution()
+{
+	rrt.bSolutionIsPlaying = qtrue;
+}
+
+void G_Q3P_RRT_PauseSolution()
+{
+	rrt.bSolutionIsPlaying = qfalse;
+}
+
+/*!
+ *	G_Q3P_RRT_PauseAlgorithm
+ *	@todo flesh this out
+ */
+void G_Q3P_PauseAlgorithm()
+{
+	rrt.bAlgorithmIsRunning = qfalse;
+}
+
+/*!
+ *	G_Q3P_RRT_RestoreNewExpansionState
+ *	At the beginning of each bot AI frame, RRT bots have their state restored
+ *	to an existing state in the tree, which is selected using a random bias
+ *	and a nearest neighbor query against the tree. 
+ */
+void G_Q3P_RRT_RestoreStateForExpansion(void)
 {
 	vec3_t randomState;
 	int stateContents;
-	snode_t *closestVertex;
+	snode_t *closestNode;
 
 	do
 	{
-		// generate a "random state"
 		randomState[0] = (float)rIntBetween(-512,  512);
 		randomState[1] = (float)rIntBetween(-256, 1088);
 		randomState[2] = (float)rIntBetween( -64,  512);
@@ -145,175 +229,117 @@ void G_Q3P_RRTSelectVertex(void)
 	}
 	while((stateContents & (CONTENTS_SOLID|CONTENTS_LAVA|CONTENTS_SLIME)));
 
-	closestVertex = rrt.sTree.states.data + 
-					getNNIdxFromSTree(&(rrt.sTree), randomState);
+	closestNode = rrt.sTree.states.data + 
+				  getNNIdxFromSTree(&(rrt.sTree), randomState);
 
 	// restore planner bot state
-	Com_Memcpy(pBot->client, &(closestVertex->client), sizeof(gclient_t));
-	Com_Memcpy(pBot, &(closestVertex->ent), sizeof(gentity_t));
+	Com_Memcpy(rrtBot->client, &(closestNode->client), sizeof(gclient_t));
+	Com_Memcpy(rrtBot, &(closestNode->ent), sizeof(gentity_t));
 
 	// restore times
-	pBot->client->ps.commandTime = level.time;
-	pBot->client->pers.cmd.serverTime = level.time;
+	rrtBot->client->ps.commandTime = level.time;
+	rrtBot->client->pers.cmd.serverTime = level.time;
 
 	// for presentation purposes
-	VectorCopy(pBot->client->ps.origin, pBot->s.origin); 
+	VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin); 
 }
 
 /*!
- *	G_Q3P_RRTAddNode
+ *	G_Q3P_RRT_AddNewState
+ *	Adds a newly expanded state to the tree.
  */
-void G_Q3P_RRTAddNode(void)
+void G_Q3P_RRT_AddNewState(void)
 {
-	snode_t currentState, *parentState;
+	snode_t newNode, *parentNode;
+	spath_t path;
 	static int temp = 0;
 
-	parentState = rrt.sGraph.states.data + rrt.sGraph.lastSelectedIdx;
-	constructSVert(&currentState, pBot, pBot->client, parentState->depth + 1,
-				   rrt.sGraph.lastSelectedIdx, NULL);
-	addToSTree(&(rrt.sGraph), &currentState);
+	parentNode = rrt.sTree.states.data + rrt.sTree.expansionNodeIdx;
+	path.nodeIdx = rrt.sTree.expansionNodeIdx;
+	path.edgeIdx = parentNode->neighbors.used;
 
-	VectorCopy(pBot->client->ps.origin, pBot->s.origin2);
-	G_AddEvent(pBot, EV_VIZ_RRT, 0);
+	constructSNode(&newNode, rrtBot, rrtBot->client, parentNode->depth + 1,
+				   path, NULL);
+	addToSTree(&(rrt.sTree), &newNode);
 
-	if(!rrt.isRunning) return;
+	// draw the new state's position clientside
+	VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin2);
+	G_AddEvent(rrtBot, EV_VIZ_RRT, 0);
 
-	if(temp++ == 64)
+	if(!rrt.bAlgorithmIsRunning) return;
+
+	// check for stopping condition
+	if(rrtBot->client->ps.origin[0] > 336.0f  &&
+	   rrtBot->client->ps.origin[0] < 432.0f  &&
+	   rrtBot->client->ps.origin[1] > 912.0f  &&
+	   rrtBot->client->ps.origin[1] < 1008.0f &&
+	   rrtBot->client->ps.origin[2] > 256.0f  &&
+	   rrtBot->client->ps.origin[2] < 344.0f)
 	{
-		rrt.isRunning = qfalse;
-		rrt.isPlayingSolution = qtrue;
-		rrt.solutionEdges = shortestPathToGoal(&(rrt.sGraph));
-		rrt.solutionEdgePtr = rrt.solutionEdges;
+		rrt.solutionPath = getMinPathToGoal(&(rrt.sTree));
+		rrt.solutionPathIdx = 0;
+		rrt.bAlgorithmIsRunning = qfalse;
+		rrt.bSolutionIsPlaying = qtrue;
 
 		// restore planner bot state to init vertex
-		Com_Memcpy(pBot->client, &(rrt.sGraph.states.data[0].client), 
+		Com_Memcpy(rrtBot->client, &(rrt.sTree.states.data[0].client), 
 			sizeof(gclient_t));
-		Com_Memcpy(pBot, &(rrt.sGraph.states.data[0].ent), 
+		Com_Memcpy(rrtBot, &(rrt.sTree.states.data[0].ent), 
 			sizeof(gentity_t));
 
 		// restore times
-		pBot->client->ps.commandTime = level.time;
-		pBot->client->pers.cmd.serverTime = level.time;
+		rrtBot->client->ps.commandTime = level.time;
+		rrtBot->client->pers.cmd.serverTime = level.time;
 
 		// for presentation purposes
-		VectorCopy(pBot->client->ps.origin, pBot->s.origin); 
+		VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin); 
 	}
 }
 
 /*!
- *	G_Q3P_RRTRunDebugFrames
+ *	G_Q3P_RRT_SelectControls
+ *	If the algorithm is still running, controls are selected randomly after
+ *	an expansion state is restored. If the solution is playing, controls are
+ *	selected from the current edge on the solution path.
  */
-void G_Q3P_RRTRunDebugFrames(const size_t n)
+void G_Q3P_RRT_SelectControls(usercmd_t * const out)
 {
-	if(rrt.isRunning) return;
+	spath_t *p;
+	snode_t *node;
 
-	rrtDebugFrames += n;
-}
-
-/*!
- *	G_Q3P_RRTIsRunning
- */
-qboolean G_Q3P_RRTIsRunning(void)
-{
-	return rrt.isRunning;
-}
-
-/*!
- *	G_Q3P_RRTIsPlayingSolution
- */
-qboolean G_Q3P_RRTIsPlayingSolution(void)
-{
-	return rrt.isPlayingSolution;
-}
-
-/*!
- *	G_Q3P_RRTStartAlgorithm
- */
-void G_Q3P_RRTStartAlgorithm(qboolean debug)
-{
-	snode_t rootState;
-
-	G_Printf("PlannerBot RRT Initialized\n");
-	
-	// construct the initial state from wherever the bot is currently
-	constructSNode(&rootState, pBot, pBot->client, 0, NULL);
-
-	// add initial state to tree
-	initSTree(&(rrt.sTree), &rootState);
-
-	if(!debug)
-		rrt.isRunning = qtrue;
-	else
-		rrt.isRunning = qfalse;
-}
-
-/*!
- *	G_Q3P_RRTRestoreEdgeControls
- */
-void G_Q3P_RRTRestoreEdgeControls(usercmd_t *out)
-{
-	memcpy(out, &(*rrt.solutionEdgePtr++)->controls, sizeof(usercmd_t));
-	if(!rrt.solutionEdgePtr) rrt.isPlayingSolution = qfalse;
-}
-
-/*!
- *	G_Q3P_RRTAdvanceSolution
- */
-void G_Q3P_RRTAdvanceSolution(void) 
-{
-	
-}
-
-/*!
- *	G_Q3P_SpawnPlannerBot
- */
-void G_Q3P_SpawnPlannerBot(void)
-{
-	pBot = G_Q3P_AddPlannerBot();
-}
-
-/*!
- *	G_Q3P_AdvancePlannerBot
- */
-void G_Q3P_AdvancePlannerBot(const int n)
-{
-	if(pBot)
+	if(rrt.bAlgorithmIsRunning)
 	{
-		//pBot->q3p_advanceFrameNum += n;
+		out->forwardmove	= rIntBetween(-127, 127);
+		out->rightmove		= rIntBetween(-127, 127);
+		out->upmove			= rIntBetween(-127, 127);
+		out->angles[0]		= ANGLE2SHORT(rIntBetween(0, 360));
+		out->angles[1]		= ANGLE2SHORT(rIntBetween(0, 360));
+		out->angles[2]		= ANGLE2SHORT(rIntBetween(0, 360));
+	}
+	else if(rrt.bSolutionIsPlaying)
+	{
+		p = rrt.solutionPath + rrt.solutionPathIdx;
+
+		if(p->nodeIdx == UINT_MAX) 
+		{
+			rrt.bSolutionIsPlaying = qfalse;
+			return;
+		}
+
+		node = rrt.sTree.states.data + p->nodeIdx;
+		Com_Memcpy(out, node->neighbors.data + p->edgeIdx, sizeof(usercmd_t));
+		rrt.solutionPathIdx++;
 	}
 }
 
-/*!
- *	G_Q3P_SelectRandomControls
- */
-void G_Q3P_SelectRandomControls(usercmd_t *out)
+qboolean G_Q3P_RRT_AlgorithmIsRunning()
 {
-	out->forwardmove	= rIntBetween(-127, 127);
-	out->rightmove		= rIntBetween(-127, 127);
-	out->upmove			= rIntBetween(-127, 127);
-	out->angles[0]		= ANGLE2SHORT(rIntBetween(0, 360));
-	out->angles[1]		= ANGLE2SHORT(rIntBetween(0, 360));
-	out->angles[2]		= ANGLE2SHORT(rIntBetween(0, 360));
+	return rrt.bAlgorithmIsRunning;
 }
 
-/*!
- *	G_Q3P_SavePlannerBotState
- */
-static gentity_t savedState;
-static struct gclient_s savedClient;
-void G_Q3P_SavePlannerBotState(void)
+qboolean G_Q3P_RRT_SolutionIsPlaying()
 {
-	Com_Memcpy(&savedClient, pBot->client, sizeof(gclient_t));
-	Com_Memcpy(&savedState, pBot, sizeof(gentity_t));
-}
-
-/*!
- *	G_Q3P_RestorePlannerBotState
- */
-void G_Q3P_RestorePlannerBotState(void)
-{
-	Com_Memcpy(pBot->client, &savedClient, sizeof(struct gclient_s));
-	Com_Memcpy(pBot, &savedState, sizeof(gentity_t));
+	return rrt.bSolutionIsPlaying;
 }
 
 //============================================================================
@@ -326,9 +352,11 @@ void G_Q3P_RestorePlannerBotState(void)
  */
 static void constructSNode(snode_t * const sn, const gentity_t * const ent, 
 						   const gclient_t * const client, const size_t depth,
+						   const spath_t path, 
 						   const sedgearray_t * const neighbors)
 {
 	sn->depth = depth;
+	sn->path  = path;
 
 	memcpy(&(sn->client), client, sizeof(gclient_t));
 	memcpy(&(sn->ent), ent, sizeof(gentity_t));
@@ -515,7 +543,25 @@ static size_t getNNIdxFromSTree(stree_t * const st, vec3_t bias)
  */
 static spath_t* getMinPathToGoal(const stree_t * const st)
 {
+	size_t i;
+	spath_t *minPath, endMarker;
+	snode_t *curNode, *rootNode;
 
+	endMarker.nodeIdx = endMarker.edgeIdx = UINT_MAX;
+
+	curNode  = st->states.data + st->states.used - 1;
+	rootNode = st->states.data;
+	minPath  = (spath_t*)malloc((curNode->depth + 1) * sizeof(spath_t));
+	i		 = curNode->depth;
+
+	minPath[i--] = endMarker;
+	while(curNode != rootNode)
+	{
+		minPath[i--] = curNode->path;
+		curNode = st->states.data + curNode->path.nodeIdx;
+	}
+
+	return minPath;
 }
 
 //============================================================================

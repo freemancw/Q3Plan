@@ -1590,48 +1590,54 @@ void Cmd_Stats_f( gentity_t *ent ) {
 */
 }
 
-/*
-=========================
-Cmd_Q3P_SpawnPlannerBot_f
-=========================
-*/
-void Cmd_Q3P_SpawnPlannerBot_f(gentity_t *ent) 
+//============================================================================
+// Q3Plan Commands
+//============================================================================
+
+void Cmd_Q3P_RRT_SpawnBot_f(gentity_t *ent) 
 {
-	G_Printf("Cmd_Q3P_SpawnPlannerBot_f\n");
-	G_Q3P_SpawnPlannerBot();
+	G_Q3P_RRT_SpawnBot();
 }
 
-/*
-===========================
-Cmd_Q3P_RRTRunDebugFrames_f
-===========================
-*/
-void Cmd_Q3P_RRTRunDebugFrames_f(gentity_t *ent) 
+void Cmd_Q3P_RRT_InitTree_f(gentity_t *ent)
+{
+	G_Q3P_RRT_InitTree();
+}
+
+void Cmd_Q3P_RRT_RunAlgorithm_f(gentity_t *ent)
+{
+	G_Q3P_RRT_RunAlgorithm();
+}
+
+void Cmd_Q3P_RRT_RunDebugFrames_f(gentity_t *ent) 
 {
 	int	n;
 	char buffer[MAX_TOKEN_CHARS];
 
 	if(trap_Argc() < 1) 
-	{
 		n = 1;
-	}
 	else 
 	{
 		trap_Argv(1, buffer, sizeof(buffer));
 		n = atoi(buffer);
 	}
 	
-	G_Q3P_RRTRunDebugFrames(n);
+	G_Q3P_RRT_RunDebugFrames(n);
 }
 
-/*
-===========================
-Cmd_Q3P_RRTStartAlgorithm_f
-===========================
-*/
-void Cmd_Q3P_RRTStartAlgorithm_f(gentity_t *ent)
+void Cmd_Q3P_RRT_PauseAlgorithm_f(gentity_t *ent)
 {
-	G_Q3P_RRTStartAlgorithm(qfalse); 
+	G_Q3P_RRT_PauseAlgorithm();
+}
+
+void Cmd_Q3P_RRT_PlaySolution_f(gentity_t *ent)
+{
+	G_Q3P_RRT_PlaySolution();
+}
+
+void Cmd_Q3P_RRT_PauseSolution_f(gentity_t *ent)
+{
+	G_Q3P_RRT_PauseSolution();
 }
 
 /*
@@ -1742,14 +1748,22 @@ void ClientCommand( int clientNum ) {
 		Cmd_SetViewpos_f( ent );
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );
-	
+
 	// freemancw - Q3Plan
-	else if (Q_stricmp (cmd, "q3p_spawnplannerbot") == 0)
-		Cmd_Q3P_SpawnPlannerBot_f( ent );
-	else if (Q_stricmp (cmd, "q3p_rrtstartalgorithm") == 0)
-		Cmd_Q3P_RRTStartAlgorithm_f( ent );
-	else if (Q_stricmp (cmd, "q3p_rrtrundebugframes") == 0)
-		Cmd_Q3P_RRTRunDebugFrames_f( ent );
+	else if (Q_stricmp (cmd, "q3p_rrt_spawnbot") == 0)
+		Cmd_Q3P_RRT_SpawnBot_f( ent );
+	else if (Q_stricmp (cmd, "q3p_rrt_inittree") == 0)
+		Cmd_Q3P_RRT_InitTree_f( ent );
+	else if (Q_stricmp (cmd, "q3p_rrt_runalgorithm") == 0)
+		Cmd_Q3P_RRT_RunAlgorithm_f( ent );
+	else if (Q_stricmp (cmd, "q3p_rrt_rundebugframes") == 0)
+		Cmd_Q3P_RRT_RunDebugFrames_f( ent );
+	else if (Q_stricmp (cmd, "q3p_rrt_pausealgorithm") == 0)
+		Cmd_Q3P_RRT_PauseAlgorithm_f( ent );
+	else if (Q_stricmp (cmd, "q3p_rrt_playsolution") == 0)
+		Cmd_Q3P_RRT_PlaySolution_f( ent );
+	else if (Q_stricmp (cmd, "q3p_rrt_pausesolution") == 0)
+		Cmd_Q3P_RRT_PauseSolution_f( ent );
 	else
 		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
 }

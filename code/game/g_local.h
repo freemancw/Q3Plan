@@ -700,18 +700,23 @@ void BotTestAAS(vec3_t origin);
 // g_plan.c
 //============================================================================
 
-void G_Q3P_SpawnPlannerBot(void);
-void G_Q3P_SelectRandomControls(usercmd_t *out);
-void G_Q3P_RRTRestoreEdgeControls(usercmd_t *out);
-void G_Q3P_RRTSelectVertex(void);
-void G_Q3P_RRTAddVertex(void);
-void G_Q3P_RRTStartAlgorithm(qboolean debug); 
-void G_Q3P_RRTRunDebugFrames(const size_t n);
-void G_Q3P_RRTAdvanceSolution(void);
-qboolean G_Q3P_RRTIsRunning(void);
-qboolean G_Q3P_RRTIsPlayingSolution(void);
+extern size_t G_Q3P_RRT_NumDebugFrames;
 
-extern size_t rrtDebugFrames;
+// controls exposed to user through console
+void		G_Q3P_RRT_SpawnBot();
+void		G_Q3P_RRT_InitTree();
+void		G_Q3P_RRT_RunAlgorithm();
+void		G_Q3P_RRT_RunDebugFrames(const size_t n);
+void		G_Q3P_RRT_PauseAlgorithm();
+void		G_Q3P_RRT_PlaySolution();
+void		G_Q3P_RRT_PauseSolution();
+
+// internal functions used to advance the algorithm
+void		G_Q3P_RRT_RestoreStateForExpansion();
+void		G_Q3P_RRT_SelectControls(usercmd_t * const out);
+void		G_Q3P_RRT_AddNewState();
+qboolean	G_Q3P_RRT_AlgorithmIsRunning();
+qboolean	G_Q3P_RRT_SolutionIsPlaying();
 
 //============================================================================
 
