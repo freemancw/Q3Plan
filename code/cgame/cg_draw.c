@@ -2651,11 +2651,7 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	if(stereoView != STEREO_CENTER)
 		CG_DrawCrosshair3D();
 
-	for(i = 0; i < q3p_numRRTQuads; i++)
-	{
-		trap_R_AddPolyToScene(cgs.media.q3p_stateVertexShader, 4, 
-							  q3p_RRTQuads[i].verts);
-	}
+	CG_Q3P_RRT_DrawSNodes();
 
 	// draw 3D view
 	trap_R_RenderScene( &cg.refdef );

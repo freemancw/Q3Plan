@@ -1476,16 +1476,15 @@ void CG_Respawn( void );
 void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops );
 void CG_CheckChangedPredictableEvents( playerState_t *ps );
 
-typedef struct
-{
-	polyVert_t verts[4];
-}
-quadpoly_t;
+//============================================================================
+// Q3Plan RRT Visualization 
+//============================================================================
 
-extern quadpoly_t q3p_RRTQuads[500000];
-extern int q3p_numRRTQuads;
+void CG_Q3P_RRT_AddSNode(const size_t nodeID, const vec3_t origin);
+void CG_Q3P_RRT_SetSNodeColor(const size_t nodeID, const vec4_t color); 
+void CG_Q3P_RRT_DrawSNodes();
 
-//===============================================
+//============================================================================
 
 //
 // system traps

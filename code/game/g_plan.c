@@ -169,6 +169,7 @@ void G_Q3P_RRT_InitTree()
 void G_Q3P_RRT_RunAlgorithm()
 {
 	rrt.bAlgorithmIsRunning = qtrue;
+	
 }
 
 /*!
@@ -239,9 +240,10 @@ void G_Q3P_RRT_RestoreStateForExpansion(void)
 	// restore times
 	rrtBot->client->ps.commandTime = level.time;
 	rrtBot->client->pers.cmd.serverTime = level.time;
+	rrtBot->client->ps.eFlags ^= EF_TELEPORT_BIT;
 
 	// for presentation purposes
-	VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin); 
+	//VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin); 
 }
 
 /*!
@@ -263,8 +265,8 @@ void G_Q3P_RRT_AddNewState(void)
 	addToSTree(&(rrt.sTree), &newNode);
 
 	// draw the new state's position clientside
-	VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin2);
-	G_AddEvent(rrtBot, EV_VIZ_RRT, 0);
+	//VectorCopy(rrtBot->client->ps.origin, rrtBot->s.origin2);
+	rrtBot->client->ps.generic1 = rrt.sTree.states.used - 1;
 
 	if(!rrt.bAlgorithmIsRunning) return;
 
@@ -320,7 +322,7 @@ void G_Q3P_RRT_SelectControls(usercmd_t * const out)
 	{
 		p = rrt.solutionPath + rrt.solutionPathIdx;
 
-		if(p->nodeIdx == UINT_MAX) 
+		if(rrt.solutionPathIdx && p->nodeIdx == UINT_MAX) 
 		{
 			rrt.bSolutionIsPlaying = qfalse;
 			return;
