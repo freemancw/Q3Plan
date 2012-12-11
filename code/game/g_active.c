@@ -1039,6 +1039,7 @@ void G_RunClient(gentity_t *ent)
 
 	if(ent->q3p_isPlannerBot) 
 	{
+
 		// get rid of the phone jack
 		ent->client->lastCmdTime = level.time;
 
@@ -1046,8 +1047,9 @@ void G_RunClient(gentity_t *ent)
 
 		if(G_Q3P_RRT_SolutionIsPlaying())
 		{
-			//ent->client->ps.commandTime = level.time - 1000;
+			ent->client->ps.commandTime = level.time - 50;
 			ClientThink_real(ent);
+			G_Q3P_RRT_SolutionPathIdx++;
 		}
 		else if(G_Q3P_RRT_AlgorithmIsRunning() || G_Q3P_RRT_NumDebugFrames)
 		{

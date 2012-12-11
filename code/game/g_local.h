@@ -701,6 +701,7 @@ void BotTestAAS(vec3_t origin);
 //============================================================================
 
 extern size_t G_Q3P_RRT_NumDebugFrames;
+extern size_t G_Q3P_RRT_SolutionPathIdx;
 
 // controls exposed to user through console
 void		G_Q3P_RRT_SpawnBot();

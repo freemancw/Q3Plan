@@ -119,7 +119,7 @@ struct
 {
 	stree_t		sTree;
 	spath_t		*solutionPath;
-	size_t		solutionPathIdx;
+	//size_t		solutionPathIdx;
 	qboolean	bAlgorithmIsRunning;
 	qboolean	bSolutionIsPlaying;
 } 
@@ -128,6 +128,7 @@ static rrt;
 static gentity_t *rrtBot;
 
 size_t	G_Q3P_RRT_NumDebugFrames;	
+size_t  G_Q3P_RRT_SolutionPathIdx;
 
 static void printNode(snode_t *node)
 {
@@ -289,7 +290,7 @@ void G_Q3P_RRT_AddNewState(void)
 	   rrtBot->client->ps.origin[2] < 88.0f)
 	{
 		rrt.solutionPath = getMinPathToGoal(&(rrt.sTree));
-		rrt.solutionPathIdx = 0;
+		G_Q3P_RRT_SolutionPathIdx = 0;
 		rrt.bAlgorithmIsRunning = qfalse;
 		rrt.bSolutionIsPlaying = qtrue;
 
@@ -339,12 +340,12 @@ void G_Q3P_RRT_SelectControls(usercmd_t * const out)
 	}
 	else if(rrt.bSolutionIsPlaying)
 	{
-		p = rrt.solutionPath + rrt.solutionPathIdx;
+		p = rrt.solutionPath + G_Q3P_RRT_SolutionPathIdx;
 
 		G_Printf("Getting controls from solution path %d: parent idx %d, parent edge idx %d\n", 
-			rrt.solutionPathIdx, p->nodeIdx, p->edgeIdx);
+			G_Q3P_RRT_SolutionPathIdx, p->nodeIdx, p->edgeIdx);
 
-		if(rrt.solutionPathIdx && p->nodeIdx == UINT_MAX) 
+		if(G_Q3P_RRT_SolutionPathIdx && p->nodeIdx == UINT_MAX) 
 		{
 			rrt.bSolutionIsPlaying = qfalse;
 			return;
@@ -360,7 +361,6 @@ void G_Q3P_RRT_SelectControls(usercmd_t * const out)
 		out->angles[0]		= cmd->angles[0];
 		out->angles[1]		= cmd->angles[1];
 		out->angles[2]		= cmd->angles[2];
-		rrt.solutionPathIdx++;
 	}
 
 	printControls(out);
