@@ -68,7 +68,7 @@ struct stree_s
 // Private RRT state tree function declarations
 //============================================================================
 
-static void			constructSNode(snode_t * const sn, 
+static void         constructSNode(snode_t * const sn, 
                                    const gentity_t * const ent, 
                                    const gclient_t * const client, 
                                    const size_t depth, const spath_t path,
