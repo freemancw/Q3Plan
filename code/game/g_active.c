@@ -911,7 +911,10 @@ void ClientThink_real( gentity_t *ent ) {
 	pm.pmove_msec = pmove_msec.integer;
 
 	VectorCopy( client->ps.origin, client->oldOrigin );
-
+    //if(ent->q3p_isPlannerBot) 
+     //   G_Printf("before: %f %f %f\n", client->ps.origin[0], client->ps.origin[1], client->ps.origin[2]);
+   // if(G_Q3P_RRT_SolutionIsPlaying()) 
+     //   G_Printf("solution!\n");
 #ifdef MISSIONPACK
 		if (level.intermissionQueued != 0 && g_singlePlayer.integer) {
 			if ( level.time - level.intermissionQueued >= 1000  ) {
@@ -929,6 +932,8 @@ void ClientThink_real( gentity_t *ent ) {
 #else
 		Pmove (&pm);
 #endif
+
+   // if(ent->q3p_isPlannerBot) G_Printf("after: %f %f %f\n", client->ps.origin[0], client->ps.origin[1], client->ps.origin[2]);
 
 	// save results of pmove
 	if ( ent->client->ps.eventSequence != oldEventSequence ) {
@@ -1035,19 +1040,29 @@ void G_RunClient(gentity_t *ent)
 	if(!(ent->r.svFlags & SVF_BOT) && !g_synchronousClients.integer) 
 		return;
 
+    G_Printf("Timings: client->lastCmdTime %d, client->ps.commandTime %d, client->ps.pm_time %d, client->pers.cmd.serverTime %d\n\n", 
+        ent->client->lastCmdTime, ent->client->ps.commandTime, ent->client->ps.pm_time,
+        ent->client->pers.cmd.serverTime);
+
 	ent->client->pers.cmd.serverTime = level.time;
 
 	if(ent->q3p_isPlannerBot) 
 	{
 
 		// get rid of the phone jack
-		ent->client->lastCmdTime = level.time;
+		//ent->client->lastCmdTime = level.time;
+        ent->client->ps.commandTime = ent->client->lastCmdTime;
+        ent->client->ps.pm_time = 0;
+        ent->client->pers.cmd.serverTime = ent->client->lastCmdTime + 50;
+
+        G_Printf("Timings before pmove: client->lastCmdTime %d, client->ps.commandTime %d, client->ps.pm_time %d, client->pers.cmd.serverTime %d\n", 
+        ent->client->lastCmdTime, ent->client->ps.commandTime, ent->client->ps.pm_time,
+        ent->client->pers.cmd.serverTime);
 
 		//G_Printf("Time delta: %d\n", level.time - ent->client->ps.commandTime);
 
 		if(G_Q3P_RRT_SolutionIsPlaying())
 		{
-			ent->client->ps.commandTime = level.time - 50;
 			ClientThink_real(ent);
 			G_Q3P_RRT_SolutionPathIdx++;
 		}

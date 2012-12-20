@@ -808,7 +808,7 @@ gentity_t* G_Q3P_AddPlannerBot(void)
 
 	// the bot is the last connected client
 	pBot = g_entities + level.numConnectedClients - 1;
-	pBot->client->pers.pmoveFixed = qtrue;
+	//pBot->client->pers.pmoveFixed = qtrue;
 	pBot->client->ps.commandTime = level.time - 50;
 	pBot->client->pers.cmd.serverTime = level.time;
 	pBot->q3p_isPlannerBot = qtrue;
